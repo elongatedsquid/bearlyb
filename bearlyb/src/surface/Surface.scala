@@ -4,7 +4,7 @@ import org.lwjgl.sdl, sdl.SDLSurface.*, sdl.SDL_Surface, sdl.SDLPixels.*
 // import org.lwjgl.stb.STBImage.*
 import org.lwjgl.system.MemoryStack.*
 import scala.util.Using
-import bearlyb.*, pixels.{PixelFormat, Color}, rect.*
+import bearlyb.*, bearlyb.util.*, pixels.{PixelFormat, Color}, rect.*
 // import java.nio.ByteBuffer
 import bearlyb.pixels.RawColor
 import bearlyb.vectors.Vec.*

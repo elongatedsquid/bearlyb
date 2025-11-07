@@ -11,7 +11,7 @@ import org.lwjgl.sdl.SDLStdinc.SDL_free
 import org.lwjgl.system.MemoryUtil.{memCopy, memAddress}
 import org.lwjgl.system.MemoryStack.stackPush
 import scala.util.Using
-import bearlyb.{mallocManyInt, sdlCreationCheck}
+import bearlyb.util.{mallocManyInt, sdlCreationCheck}
 import bearlyb.vectors.Vec.given
 
 private[bearlyb] object imghelper:

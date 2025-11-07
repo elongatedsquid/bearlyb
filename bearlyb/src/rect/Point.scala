@@ -1,12 +1,10 @@
 package bearlyb.rect
 
-import scala.util.Using
 import org.lwjgl.sdl.SDL_FPoint
-import org.lwjgl.system.MemoryStack, MemoryStack.stackPush
+import org.lwjgl.system.MemoryStack
 import org.lwjgl.sdl.SDLRender.SDL_RenderCoordinatesToWindow
 import bearlyb.render.Renderer
-import bearlyb.mallocManyFloat
-import bearlyb.sdlErrorCheck
+import bearlyb.util.*
 
 type Point[T] = (T, T)
 
@@ -29,12 +27,11 @@ object Point:
       */
     def toWindowCoords(renderer: Renderer): Point[Float] =
       val (x, y) = pt
-      Using(stackPush()): stack =>
+      withStack:
         val (outx, outy) = mallocManyFloat(2, stack)
         SDL_RenderCoordinatesToWindow(renderer.internal, x, y, outx, outy)
           .sdlErrorCheck()
         (outx.get(0), outy.get(0))
-      .get
 
   end extension
 

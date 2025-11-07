@@ -3,7 +3,7 @@ package bearlyb.video
 import org.lwjgl.sdl, sdl.SDLVideo.*, sdl.SDLProperties.*
 import org.lwjgl.system, system.MemoryStack.stackPush
 import scala.util.Using
-import bearlyb.*
+import bearlyb.*, bearlyb.util.*
 import render.Renderer
 import bearlyb.surface.Surface
 

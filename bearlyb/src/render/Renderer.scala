@@ -1,6 +1,7 @@
 package bearlyb.render
 
 import org.lwjgl.sdl.SDLRender.*
+import bearlyb.util.*
 import bearlyb.*
 import bearlyb.pixels.Color
 import org.lwjgl.system.MemoryStack.stackPush
@@ -25,16 +26,14 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
 
   def isViewportSet: Boolean = SDL_RenderViewportSet(internal)
 
-  def viewport: Rect[Int] = Using(stackPush()): stack =>
+  def viewport: Rect[Int] = withStack:
     val rect = SDL_Rect.malloc(stack)
     SDL_GetRenderViewport(internal, rect).sdlErrorCheck()
     Rect.fromInternal(rect)
-  .get
 
-  def viewport_=(rect: Rect[Int]): Unit = Using(stackPush()): stack =>
+  def viewport_=(rect: Rect[Int]): Unit = withStack:
     val r = rect.internal(stack)
     SDL_SetRenderViewport(internal, r).sdlErrorCheck()
-  .get
 
   def target: Option[Texture] = Option(SDL_GetRenderTarget(internal))
     .map(new Texture(_))
@@ -324,6 +323,25 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
 
   def createTexture(format: PixelFormat, access: TextureAccess, w: Int, h: Int)
       : Texture = Texture(this, format, access, w, h)
+
+  /** Render a string to this renderer
+    *
+    * This function has severe limitations:
+    *   - Accepts UTF8-strings, but only renders ASCII-characters
+    *   - Has a single tiny size (8x8 pixels). You can use logical presentation
+    *     or render scale to change it.
+    *   - It does not support proper scaling or different font selections like
+    *     bold or italic, because it has a single hardcoded bitmap-font.
+    *   - It does not do word-wrapping or handle newlines, everything is
+    *     renderered on a single line.
+    *
+    * @param pt
+    * @param str
+    * @param num
+    */
+  def renderDebugText[T: Numeric as num](pt: Point[T])(str: String): Unit =
+    val (x, y) = pt.vmap(num.toFloat)
+    SDL_RenderDebugText(internal, x, y, str).sdlErrorCheck()
 
 end Renderer
 

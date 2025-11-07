@@ -3,7 +3,7 @@ package bearlyb.render
 import org.lwjgl.sdl.SDL_Texture
 import org.lwjgl.sdl.SDLRender.*
 import org.lwjgl.sdl.SDLPixels.*
-import bearlyb.sdlCreationCheck
+import bearlyb.util.*
 import bearlyb.rect.Rect
 import bearlyb.rect.Point
 import bearlyb.pixels.RawColor
@@ -12,7 +12,6 @@ import scala.util.Using.Releasable
 import org.lwjgl.sdl.SDL_PixelFormatDetails
 import scala.util.Using
 import org.lwjgl.system.MemoryStack.stackPush
-import bearlyb.sdlErrorCheck
 import java.nio.ByteBuffer
 import bearlyb.video.imghelper
 import bearlyb.pixels.PixelFormat

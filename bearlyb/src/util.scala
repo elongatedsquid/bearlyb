@@ -1,14 +1,20 @@
-package bearlyb
+package bearlyb.util
 
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.system.MemoryStack
 import scala.compiletime.ops.int.S
 import java.nio.{ByteBuffer, IntBuffer, LongBuffer, FloatBuffer, DoubleBuffer}
+import scala.util.Using
 
 private[bearlyb] inline val NullPtr = org.lwjgl.system.MemoryUtil.NULL
 
 private[bearlyb] def sdlError(): Nothing =
-  throw BearlybException(s"SDL Error: ${SDL_GetError()}")
+  throw bearlyb.BearlybException(s"SDL Error: ${SDL_GetError()}")
+
+private[bearlyb] def withStack[T](body: MemoryStack ?=> T): T = Using
+  .resource(MemoryStack.stackPush())(stk => body(using stk))
+
+private[bearlyb] def stack(using stk: MemoryStack) = stk
 
 extension (success: Boolean)
 
@@ -25,11 +31,7 @@ extension [T](obj: T)
   private[bearlyb] def sdlCreationCheck(): T =
     if obj != null then obj else sdlError()
 
-type Vec[+T, Len <: Int] <: Tuple = Len match
-  case 0    => EmptyTuple
-  case S[n] => T *: Vec[T, n]
-
-sealed trait MallocMany[N <: Int]:
+sealed private[bearlyb] trait MallocMany[N <: Int]:
   type Return[+T] <: Tuple
 
   def mallocMany(stack: MemoryStack): Return[ByteBuffer]
@@ -42,7 +44,7 @@ sealed trait MallocMany[N <: Int]:
 
 end MallocMany
 
-object MallocMany:
+private[bearlyb] object MallocMany:
 
   given MallocMany[0]:
     type Return[+T] = EmptyTuple
