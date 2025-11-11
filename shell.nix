@@ -1,6 +1,7 @@
+# most of this code has been yoinked from the nixpkgs version of SDL, before they changed it to be statically built
 {
   pkgs ? import (
-    fetchTarball "https://github.com/NixOS/nixpkgs/archive/647e5c14cbd5067f44ac86b74f014962df460840.tar.gz"
+    fetchTarball "https://github.com/NixOS/nixpkgs/archive/f6b44b2401525650256b977063dbcf830f762369.tar.gz"
   ) {}
 }:
 let
@@ -70,7 +71,6 @@ in
   assert lib.assertMsg (
     ibusSupport -> dbusSupport
   ) "SDL3 requires dbus support to enable ibus";
-
   pkgs.mkShell rec {
     buildInputs = dlopenBuildInputs;
 
@@ -84,6 +84,8 @@ in
       jdk21
       scala-next
       scala-cli
+      metals
       mill
+      coursier
     ];
   }

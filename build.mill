@@ -1,4 +1,4 @@
-//| mill-version: 1.0.4
+//| mill-version: 1.0.6
 
 import mill.*, scalalib.*, publish.*
 import coursier.MavenRepository
@@ -8,7 +8,7 @@ import mill.util.JarManifest
 import os.SubPath
 
 trait BearlybModule extends ScalaModule:
-  final def scalaVersion = "3.7.2"
+  final def scalaVersion = "3.7.3"
 
 object bearlyb extends LwjglModule, PublishModule:
   def publishVersion = "0.1.2"
@@ -22,11 +22,7 @@ object bearlyb extends LwjglModule, PublishModule:
     developers = Seq(Developer("lego-eden", "Hampus Edén", "https://github.com/lego-eden"))
   )
 
-  val deps = Seq(
-    mvn"com.lihaoyi::os-lib:0.11.4",
-    mvn"com.softwaremill.ox::core:0.5.13",
-    mvn"io.github.iltotore::iron:3.0.1"
-  )
+  val deps = Seq(mvn"com.lihaoyi::os-lib:0.11.4")
   def moduleDeps = Seq(`bearlyb-vectors`)
   def mvnDeps = super.mvnDeps() ++ deps
   def runMvnDeps = super.runMvnDeps()
