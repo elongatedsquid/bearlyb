@@ -9,7 +9,9 @@ def createWindow(width: Int, height: Int) =
   SDL_SetNumberProperty(props, "width", 800)
   SDL_SetNumberProperty(props, "height", 600)
   SDL_SetBooleanProperty(
-    props, SDL_PROP_WINDOW_CREATE_WAYLAND_SURFACE_ROLE_CUSTOM_BOOLEAN, true
+    props,
+    SDL_PROP_WINDOW_CREATE_WAYLAND_SURFACE_ROLE_CUSTOM_BOOLEAN,
+    true
   )
   val window = SDL_CreateWindowWithProperties(props)
   SDL_DestroyProperties(props)
@@ -34,15 +36,20 @@ def main(): Unit =
     sys.exit(-1)
 
   Using.resources(stackPush(), SDL_Event.create()): (stack, event) =>
-    val windowPtr   = stack.mallocPointer(1)
+    val windowPtr = stack.mallocPointer(1)
     val rendererPtr = stack.mallocPointer(1)
     if !SDL_CreateWindowAndRenderer(
-        "Hello sdl!", 640, 480, SDL_WINDOW_RESIZABLE, windowPtr, rendererPtr
+        "Hello sdl!",
+        640,
+        480,
+        SDL_WINDOW_RESIZABLE,
+        windowPtr,
+        rendererPtr
       )
     then
       println(SDL_GetError())
       sys.exit()
-    val window   = windowPtr.get(0)
+    val window = windowPtr.get(0)
     val renderer = rendererPtr.get(0)
     println(s"$window $renderer")
     var shouldRun = true
@@ -53,7 +60,11 @@ def main(): Unit =
           case _                                   => ()
 
       SDL_SetRenderDrawColorFloat(
-        renderer, 1.0, 0.0, 0.0, SDL_ALPHA_OPAQUE_FLOAT
+        renderer,
+        1.0,
+        0.0,
+        0.0,
+        SDL_ALPHA_OPAQUE_FLOAT
       )
       SDL_RenderClear(renderer)
       SDL_RenderPresent(renderer)

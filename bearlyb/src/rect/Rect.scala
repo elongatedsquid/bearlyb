@@ -1,15 +1,17 @@
 package bearlyb.rect
 
+import bearlyb.vectors.Vec
 import org.lwjgl.sdl.*
-// import SDLRect.*
-// import scala.util.Using
-import scala.util.boundary, boundary.break
 import org.lwjgl.system.MemoryStack
+
+import scala.annotation.targetName
+import scala.util.boundary
+import scala.util.boundary.Label
+
+import boundary.break
 import Numeric.Implicits as numext
 import Ordering.Implicits as ordext
-import scala.util.boundary.Label
-import bearlyb.vectors.Vec, Vec.swizzleExtensions.xyxy
-import scala.annotation.targetName
+import Vec.swizzleExtensions.xyxy
 // import MemoryStack.*
 
 case class Rect[T](x: T, y: T, w: T, h: T)
@@ -18,9 +20,9 @@ object Rect:
   import EnclosepointsEpsilon.value
 
   inline val CodeBottom = 0b0001
-  inline val CodeTop    = 0b0010
-  inline val CodeLeft   = 0b0100
-  inline val CodeRight  = 0b1000
+  inline val CodeTop = 0b0010
+  inline val CodeLeft = 0b0100
+  inline val CodeRight = 0b1000
 
   def empty[T: Numeric as num] =
     new Rect(num.zero, num.zero, num.zero, num.zero)
@@ -28,7 +30,7 @@ object Rect:
   def enclosePoints[T: {Numeric as num, EnclosepointsEpsilon as encloseEps}](
       points: IterableOnce[Point[T]],
       clip: Rect[T] | Null = null
-    ): Rect[T] = boundary:
+  ): Rect[T] = boundary:
     import numext.infixNumericOps, ordext.infixOrderingOps
 
     val eps = encloseEps.value
@@ -62,13 +64,14 @@ object Rect:
 
     Rect(minx, miny, (maxx - minx) + eps, (maxy - miny) + eps)
 
-  def enclosePoints[T: {Numeric, EnclosepointsEpsilon}](points: Point[T]*)
-      : Rect[T] = enclosePoints(points)
+  def enclosePoints[T: {Numeric, EnclosepointsEpsilon}](
+      points: Point[T]*
+  ): Rect[T] = enclosePoints(points)
 
   def enclosePoints[T: {Numeric, EnclosepointsEpsilon}](
       clip: Rect[T],
       points: Point[T]*
-    ): Rect[T] = enclosePoints(points, clip)
+  ): Rect[T] = enclosePoints(points, clip)
 
   private[bearlyb] def fromInternal(rect: SDL_Rect): Rect[Int] =
     new Rect(rect.x(), rect.y(), rect.w(), rect.h())
@@ -130,25 +133,27 @@ object Rect:
       case frac: Fractional[T] => frac.div(a, b)
       case inte: Integral[T]   => inte.quot(a, b)
 
-    def hasIntersection(other: Rect[T])(using EnclosepointsEpsilon[T])
-        : Boolean = !self.intersection(other).isEmpty
+    def hasIntersection(other: Rect[T])(using
+        EnclosepointsEpsilon[T]
+    ): Boolean = !self.intersection(other).isEmpty
 
-    def intersection(other: Rect[T])(using encloseEps: EnclosepointsEpsilon[T])
-        : Rect[T] =
+    def intersection(other: Rect[T])(using
+        encloseEps: EnclosepointsEpsilon[T]
+    ): Rect[T] =
       import numext.infixNumericOps, ordext.infixOrderingOps
       boundary:
         if self.isEmpty || other.isEmpty then break(Rect.empty)
 
         lazy val eps = encloseEps.value
 
-        lazy val x    = self.x max other.x
+        lazy val x = self.x max other.x
         lazy val xmax = self.xmax min other.xmax
-        lazy val w    = xmax - x
+        lazy val w = xmax - x
         if xmax - eps < x then break(Rect.empty)
 
-        lazy val y    = self.y max other.y
+        lazy val y = self.y max other.y
         lazy val ymax = self.ymax min other.ymax
-        lazy val h    = ymax - y
+        lazy val h = ymax - y
         if ymax - eps < y then break(Rect.empty)
 
         Rect(x, y, w, h)
@@ -163,14 +168,14 @@ object Rect:
         case (false, true)  => self
         case (false, false) =>
           // horizontal union
-          val x    = self.x min other.x
+          val x = self.x min other.x
           val xmax = self.xmax max other.xmax
-          val w    = xmax - x
+          val w = xmax - x
 
           // vertical union
-          val y    = self.y min other.y
+          val y = self.y min other.y
           val ymax = self.ymax max other.ymax
-          val h    = ymax - y
+          val h = ymax - y
 
           Rect(x, y, w, h)
       end match
@@ -187,12 +192,16 @@ object Rect:
   extension [
       T: {([t] =>> Fractional[t] | Integral[t]) as num,
         EnclosepointsEpsilon as encloseEps}
-    ](
+  ](
       self: Rect[T]
-    )
+  )
 
-    def intersection(x1: T, y1: T, x2: T, y2: T)
-        : Option[(near: Point[T], far: Point[T])] =
+    def intersection(
+        x1: T,
+        y1: T,
+        x2: T,
+        y2: T
+    ): Option[(near: Point[T], far: Point[T])] =
       import numext.infixNumericOps, ordext.infixOrderingOps
 
       val eps = encloseEps.value
@@ -218,15 +227,16 @@ object Rect:
           y1: T,
           x2: T,
           y2: T
-        )(using Label[Option[(near: Point[T], far: Point[T])]]
-        ) = break(Some((x1, y1), (x2, y2)))
+      )(using Label[Option[(near: Point[T], far: Point[T])]]) = break(
+        Some((x1, y1), (x2, y2))
+      )
 
       boundary:
         if self.isEmpty then break(None)
 
         val (rectx1, recty1) = (self.x, self.y)
-        val rectx2           = self.x + self.w - eps
-        val recty2           = self.y + self.h - eps
+        val rectx2 = self.x + self.w - eps
+        val recty2 = self.y + self.h - eps
 
         // Check to see if entire line is inside rect
         if x1 >= rectx1 && x1 <= rectx2 && x2 >= rectx1 && x2 <= rectx2 &&
@@ -256,9 +266,9 @@ object Rect:
 
         // More complicated Cohen-Sutherland algorithm
         var (x1tmp, y1tmp, x2tmp, y2tmp) = (x1, y1, x2, y2)
-        var (x: T, y: T)                 = (num.zero, num.zero)
-        var outcode1                     = computeOutcode(x1, x2)
-        var outcode2                     = computeOutcode(x2, y2)
+        var (x: T, y: T) = (num.zero, num.zero)
+        var outcode1 = computeOutcode(x1, x2)
+        var outcode2 = computeOutcode(x2, y2)
         while (outcode1 != 0) || (outcode2 != 0) do
           if (outcode1 & outcode2) != 0 then break(None)
 
@@ -344,10 +354,10 @@ object Rect:
   object CompareEpsilon:
     extension [T](ep: CompareEpsilon[T]) def value: T = ep
 
-    def apply[T](value: T): CompareEpsilon[T]     = value
+    def apply[T](value: T): CompareEpsilon[T] = value
     def unapply[T](wrapped: CompareEpsilon[T]): T = wrapped
 
-    given CompareEpsilon[Float]  = 1.1920928955078125e-07f
+    given CompareEpsilon[Float] = 1.1920928955078125e-07f
     given CompareEpsilon[Double] = 1.1920928955078125e-07d
 
   end CompareEpsilon

@@ -215,7 +215,7 @@ object PixelFormat:
 
     def mapColor(c: Color, palette: Palette | Null = null): RawColor =
       import bearlyb.vectors.Vec.given
-      val (r, g, b, a)             = c.toTuple.vmap(_.toByte)
+      val (r, g, b, a) = c.toTuple.vmap(_.toByte)
       val ipal: SDL_Palette | Null = palette match
         case null         => null
         case pal: Palette => pal.internal

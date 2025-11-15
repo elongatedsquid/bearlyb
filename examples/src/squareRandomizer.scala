@@ -13,10 +13,10 @@ def squareRandomizer(): Unit =
   val (window, renderer) = bl
     .createWindowAndRenderer("hello bearlyb!", width, height)
 
-  var running          = true
-  var x                = width / 2
-  var y                = height / 2
-  var count            = 1
+  var running = true
+  var x = width / 2
+  var y = height / 2
+  var count = 1
   val measureTimeEvery = 2000
   println("HELLO bearlyb! Press Q to quit. Press Arrow Keys to move rectangle.")
   var t0 = System.nanoTime()
@@ -44,7 +44,7 @@ def squareRandomizer(): Unit =
     renderer.present()
     if (count % measureTimeEvery) == 0 then
       val time = System.nanoTime() - t0
-      val fps  = 1e9 / time
+      val fps = 1e9 / time
       println(s"Time between frames: ${time / 1e9} ns")
       println(s"Frames per second  : ${(fps + 10).round / 10.0} fps")
     end if

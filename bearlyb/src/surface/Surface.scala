@@ -1,16 +1,22 @@
 package bearlyb.surface
 
-import org.lwjgl.sdl, sdl.SDLSurface.*, sdl.SDL_Surface, sdl.SDLPixels.*
-// import org.lwjgl.stb.STBImage.*
-import org.lwjgl.system.MemoryStack.*
-import scala.util.Using
-import bearlyb.*, bearlyb.util.*, pixels.{PixelFormat, Color}, rect.*
-// import java.nio.ByteBuffer
+import bearlyb.*
 import bearlyb.pixels.RawColor
-import bearlyb.vectors.Vec.*
-import scala.math.Numeric.Implicits.infixNumericOps
 import bearlyb.surface.FlipMode
+import bearlyb.util.*
+import bearlyb.vectors.Vec.*
 import bearlyb.video.imghelper
+import org.lwjgl.sdl
+import org.lwjgl.system.MemoryStack.*
+
+import scala.math.Numeric.Implicits.infixNumericOps
+import scala.util.Using
+
+import sdl.SDLSurface.*
+import sdl.SDL_Surface
+import sdl.SDLPixels.*
+import pixels.{PixelFormat, Color}
+import rect.*
 
 class Surface private (private[bearlyb] val internal: SDL_Surface):
   import Surface.Pos
@@ -36,12 +42,15 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
       src: Surface,
       dstmask: Rect[Int] | Null = null,
       srcmask: Rect[Int] | Null = null
-    )(using scaleMode: ScaleMode
-    ): Unit = Using(stackPush()): stack =>
+  )(using scaleMode: ScaleMode): Unit = Using(stackPush()): stack =>
     val srcrect = srcmask.internal(stack)
     val dstrect = dstmask.internal(stack)
     SDL_BlitSurfaceScaled(
-      src.internal, srcrect, this.internal, dstrect, scaleMode.ordinal
+      src.internal,
+      srcrect,
+      this.internal,
+      dstrect,
+      scaleMode.ordinal
     ).sdlErrorCheck()
   .get
 
@@ -49,7 +58,7 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
       src: Surface,
       dstmask: Rect[Int] | Null = null,
       srcmask: Rect[Int] | Null = null
-    ): Unit = Using(stackPush()): stack =>
+  ): Unit = Using(stackPush()): stack =>
     val srcrect = srcmask.internal(stack)
     val dstrect = dstmask.internal(stack)
     SDL_BlitSurfaceTiled(src.internal, srcrect, this.internal, dstrect)
@@ -61,12 +70,15 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
       scale: T,
       dstmask: Rect[Int] | Null = null,
       srcmask: Rect[Int] | Null = null
-    )(using scaleMode: ScaleMode
-    ): Unit = Using(stackPush()): stack =>
+  )(using scaleMode: ScaleMode): Unit = Using(stackPush()): stack =>
     val srcrect = srcmask.internal(stack)
     val dstrect = dstmask.internal(stack)
     SDL_BlitSurfaceTiledWithScale(
-      src.internal, srcrect, scale.toFloat, scaleMode.ordinal, this.internal,
+      src.internal,
+      srcrect,
+      scale.toFloat,
+      scaleMode.ordinal,
+      this.internal,
       dstrect
     ).sdlErrorCheck()
   .get
@@ -74,8 +86,10 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
   def scaled[T: Numeric as num](by: T)(using scaleMode: ScaleMode): Surface =
     new Surface(
       SDL_ScaleSurface(
-        internal, (num.fromInt(width) * by).toInt,
-        (num.fromInt(height) * by).toInt, scaleMode.ordinal
+        internal,
+        (num.fromInt(width) * by).toInt,
+        (num.fromInt(height) * by).toInt,
+        scaleMode.ordinal
       ).sdlCreationCheck()
     )
 
@@ -95,7 +109,7 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
 
   def saveBMP(file: String): Unit = SDL_SaveBMP(internal, file).sdlErrorCheck()
 
-  def width: Int  = internal.w
+  def width: Int = internal.w
   def height: Int = internal.h
 
   def format: PixelFormat = PixelFormat.fromInternal(internal.format)
@@ -130,10 +144,16 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
   end update
 
   def update(pos: Pos, color: Color): Unit =
-    val (x, y)       = pos
+    val (x, y) = pos
     val (r, g, b, a) = color
     SDL_WriteSurfacePixel(
-      internal, x, y, r.toByte, g.toByte, b.toByte, a.toByte
+      internal,
+      x,
+      y,
+      r.toByte,
+      g.toByte,
+      b.toByte,
+      a.toByte
     ).sdlErrorCheck()
 
   def update(x: Int, y: Int, color: Color): Unit = update((x, y), color)
@@ -141,29 +161,37 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
   def mapRGBA(color: Color): RawColor =
 
     val (r, g, b, a) = color
-    val result       =
+    val result =
       SDL_MapSurfaceRGBA(internal, r.toByte, g.toByte, b.toByte, a.toByte)
     RawColor(result)
 
   /** Converts a color to the raw value, depending on the surface's format.
     *
-    * @param color the color to be converted
-    * @tparam T the type used to represent each channel of the color, if it is
-    *   an integer type, then the value must be between 0 and 255, and if it is
-    *   a floating-point type (or is fractional), then the value must be in the
+    * @param color
+    *   the color to be converted
+    * @tparam T
+    *   the type used to represent each channel of the color, if it is an
+    *   integer type, then the value must be between 0 and 255, and if it is a
+    *   floating-point type (or is fractional), then the value must be in the
     *   range 0..=1
-    * @return the raw color value
+    * @return
+    *   the raw color value
     */
   def mapRGB(color: NamedTuple.Init[Color]): RawColor =
     val (r, g, b) = color
-    val result    = SDL_MapSurfaceRGB(internal, r.toByte, g.toByte, b.toByte)
+    val result = SDL_MapSurfaceRGB(internal, r.toByte, g.toByte, b.toByte)
     RawColor(result)
 
   def unmapRGBA(raw: RawColor): Color = Using(stackPush()): stack =>
     val (r, g, b, a) = mallocMany(4, stack)
     SDL_GetRGBA(
-      raw.internal, SDL_GetPixelFormatDetails(internal.format),
-      SDL_GetSurfacePalette(internal), r, g, b, a
+      raw.internal,
+      SDL_GetPixelFormatDetails(internal.format),
+      SDL_GetSurfacePalette(internal),
+      r,
+      g,
+      b,
+      a
     )
     (r.get(0).toInt, g.get(0).toInt, b.get(0).toInt, a.get(0).toInt)
   .get
@@ -172,8 +200,12 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
     Using(stackPush()): stack =>
       val (r, g, b) = mallocMany(3, stack)
       SDL_GetRGB(
-        raw.internal, SDL_GetPixelFormatDetails(internal.format),
-        SDL_GetSurfacePalette(internal), r, g, b
+        raw.internal,
+        SDL_GetPixelFormatDetails(internal.format),
+        SDL_GetSurfacePalette(internal),
+        r,
+        g,
+        b
       )
       (r.get(0).toInt, g.get(0).toInt, b.get(0).toInt)
     .get
@@ -197,8 +229,9 @@ class Surface private (private[bearlyb] val internal: SDL_Surface):
     * representations of cursors or icons. This call adds a reference to the
     * image so you should call image.destroy() after this method returns.
     *
-    * @param image alternative version of this surface, does not need to be the
-    *   same format, size, or have the same content as this surface.
+    * @param image
+    *   alternative version of this surface, does not need to be the same
+    *   format, size, or have the same content as this surface.
     */
   def addAlternateImage(image: Surface): Unit =
     SDL_AddSurfaceAlternateImage(internal, image.internal).sdlErrorCheck()
@@ -234,19 +267,24 @@ end Surface
 object Surface:
   type Pos = Point[Int]
 
-  def apply(width: Int, height: Int, format: PixelFormat = PixelFormat.RGBA8888)
-      : Surface = new Surface(
+  def apply(
+      width: Int,
+      height: Int,
+      format: PixelFormat = PixelFormat.RGBA8888
+  ): Surface = new Surface(
     SDL_CreateSurface(width, height, format.internal).sdlCreationCheck()
   )
 
-  def unapply(s: Surface)
-      : Some[(width: Int, height: Int, format: PixelFormat)] =
+  def unapply(
+      s: Surface
+  ): Some[(width: Int, height: Int, format: PixelFormat)] =
     Some(s.width, s.height, s.format)
 
   private[bearlyb] def fromInternal(internal: SDL_Surface): Surface =
     new Surface(internal)
 
-  def loadImage(file: String): Option[Surface] = imghelper.loadSurface(file)
+  def loadImage(file: String): Option[Surface] = imghelper
+    .loadSurface(file)
     .map(fromInternal)
   end loadImage
 

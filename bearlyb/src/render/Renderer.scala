@@ -1,27 +1,24 @@
 package bearlyb.render
 
-import org.lwjgl.sdl.SDLRender.*
-import bearlyb.util.*
 import bearlyb.*
-import bearlyb.pixels.Color
-import org.lwjgl.system.MemoryStack.stackPush
-import bearlyb.rect.Point, Point.*
+import bearlyb.pixels.{Color, FColor, PixelFormat}
+import bearlyb.rect.{Point, Rect}
+import bearlyb.surface.FlipMode
+import bearlyb.util.*
 import bearlyb.vectors.Vec.{*, given}
+import bearlyb.video.{BlendMode, Window}
+import org.lwjgl.sdl.SDLRender.*
+import org.lwjgl.sdl.{SDL_FPoint, SDL_FRect, SDL_Rect}
+import org.lwjgl.system.MemoryStack.stackPush
+
 import scala.annotation.targetName
 import scala.util.Using
-import org.lwjgl.sdl.SDL_FPoint
-import org.lwjgl.sdl.SDL_FRect
-import bearlyb.video.Window
-import bearlyb.video.BlendMode
-import bearlyb.rect.Rect
-import bearlyb.surface.FlipMode
-import org.lwjgl.sdl.SDL_Rect
-import bearlyb.pixels.FColor
-import bearlyb.pixels.PixelFormat
+
+import Point.*
 
 class Renderer private[render] (private[bearlyb] val internal: Long):
 
-  lazy val name: String   = SDL_GetRendererName(internal)
+  lazy val name: String = SDL_GetRendererName(internal)
   lazy val window: Window = new Window(SDL_GetRenderWindow(internal))
 
   def isViewportSet: Boolean = SDL_RenderViewportSet(internal)
@@ -95,14 +92,15 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       val (w, h, mode) = mallocManyInt(3, stack)
       SDL_GetRenderLogicalPresentation(internal, w, h, mode).sdlErrorCheck()
       (
-        w.get(0), h.get(0),
+        w.get(0),
+        h.get(0),
         Renderer.LogicalPresentation.fromInternal(mode.get(0))
       )
     .get
 
   def logicalPresentation_=(
       logicalPresentation: (w: Int, h: Int, mode: Renderer.LogicalPresentation)
-    ): Unit =
+  ): Unit =
     val (w, h, mode) = logicalPresentation
     SDL_SetRenderLogicalPresentation(internal, w, h, mode.internal)
       .sdlErrorCheck()
@@ -142,7 +140,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
   def drawBlendMode_=(blendMode: BlendMode): Unit =
     SDL_SetRenderDrawBlendMode(internal, blendMode.internal).sdlErrorCheck()
 
-  def clear(): Unit   = SDL_RenderClear(internal).sdlErrorCheck()
+  def clear(): Unit = SDL_RenderClear(internal).sdlErrorCheck()
   def present(): Unit = SDL_RenderPresent(internal).sdlErrorCheck()
 
   def drawPoint[T: Numeric as num](x: T, y: T): Unit =
@@ -240,7 +238,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       tex: Texture,
       src: Rect[T] | Null = null,
       dst: Rect[T] | Null = null
-    ): Unit = Using(stackPush()): stack =>
+  ): Unit = Using(stackPush()): stack =>
     val srcrect = src.toFloatRect.internal(stack)
     val dstrect = dst.toFloatRect.internal(stack)
     SDL_RenderTexture(internal, tex.internal, srcrect, dstrect).sdlErrorCheck()
@@ -255,17 +253,23 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       src: Rect[T] | Null = null,
       dst: Rect[T] | Null = null,
       flip: FlipMode = FlipMode.None
-    ): Unit =
+  ): Unit =
     import Numeric.Implicits.infixNumericOps
     Using(stackPush()): stack =>
-      val srcrect     = src.toFloatRect.internal(stack)
-      val dstrect     = dst.toFloatRect.internal(stack)
+      val srcrect = src.toFloatRect.internal(stack)
+      val dstrect = dst.toFloatRect.internal(stack)
       val centerpoint = center match
         case null   => null
         case (x, y) => SDL_FPoint.malloc(stack).set(x.toFloat, y.toFloat)
       val flipmode = flip.internal
       SDL_RenderTextureRotated(
-        internal, tex.internal, srcrect, dstrect, angle, centerpoint, flipmode
+        internal,
+        tex.internal,
+        srcrect,
+        dstrect,
+        angle,
+        centerpoint,
+        flipmode
       ).sdlErrorCheck()
     .get
 
@@ -280,17 +284,24 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       src: Rect[T] | Null = null,
       dst: Rect[T] | Null = null,
       scale: Float = 1.0f
-    ): Unit =
+  ): Unit =
     import Numeric.Implicits.infixNumericOps
     Using(stackPush()): stack =>
       val srcrect = src.floatInternal(stack)
       val dstrect = dst.floatInternal(stack)
-      val leftw   = leftWidth.toFloat
-      val rightw  = rightWidth.toFloat
-      val toph    = topHeight.toFloat
+      val leftw = leftWidth.toFloat
+      val rightw = rightWidth.toFloat
+      val toph = topHeight.toFloat
       val bottomh = bottomHeight.toFloat
       SDL_RenderTexture9Grid(
-        internal, tex.internal, srcrect, leftw, rightw, toph, bottomh, scale,
+        internal,
+        tex.internal,
+        srcrect,
+        leftw,
+        rightw,
+        toph,
+        bottomh,
+        scale,
         dstrect
       ).sdlErrorCheck()
     .get
@@ -303,9 +314,9 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       right: Point[T] | Null = null,
       down: Point[T] | Null = null,
       src: Rect[T] | Null = null
-    ): Unit = Using(stackPush()): stack =>
+  ): Unit = Using(stackPush()): stack =>
     val (o, r, d) = (origin, right, down).vmap(_.floatInternal(stack))
-    val srcrect   = src.floatInternal(stack)
+    val srcrect = src.floatInternal(stack)
     SDL_RenderTextureAffine(internal, tex.internal, srcrect, o, r, d)
       .sdlErrorCheck()
   .get
@@ -315,14 +326,18 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       scale: Float = 1.0f,
       src: Rect[T] | Null = null,
       dst: Rect[T] | Null = null
-    ): Unit = Using(stackPush()): stack =>
+  ): Unit = Using(stackPush()): stack =>
     val (srcrect, dstrect) = (src, dst).vmap(_.floatInternal(stack))
     SDL_RenderTextureTiled(internal, tex.internal, srcrect, scale, dstrect)
       .sdlErrorCheck()
   .get
 
-  def createTexture(format: PixelFormat, access: TextureAccess, w: Int, h: Int)
-      : Texture = Texture(this, format, access, w, h)
+  def createTexture(
+      format: PixelFormat,
+      access: TextureAccess,
+      w: Int,
+      h: Int
+  ): Texture = Texture(this, format, access, w, h)
 
   /** Render a string to this renderer
     *

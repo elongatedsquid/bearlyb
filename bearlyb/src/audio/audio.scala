@@ -1,18 +1,20 @@
 package bearlyb.audio
 
+import bearlyb.util.*
 import org.lwjgl.sdl.SDLAudio.*
 import org.lwjgl.sdl.SDL_AudioStreamCallbackI
 import org.lwjgl.system.MemoryStack.stackPush
-import bearlyb.util.*
+
 import scala.util.Using
 
-type AudioStreamCallback = (AudioStream, Int, Int) => Unit
+type AudioStreamCallback =
+  (stream: AudioStream, additionalAmount: Int, totalAmount: Int) => Unit
 
 def openAudioDeviceStream(
     devid: AudioDevice,
     spec: AudioSpec | Null = null,
     callback: AudioStreamCallback | Null = null
-  ): AudioStream =
+): AudioStream =
   val internalCallback: SDL_AudioStreamCallbackI | Null = callback match
     case null                    => null
     case cb: AudioStreamCallback =>
@@ -24,7 +26,10 @@ def openAudioDeviceStream(
       case s: AudioSpec => s.internal(stack)
     AudioStream.fromInternal(
       SDL_OpenAudioDeviceStream(
-        devid.internal, sdlspec, internalCallback, NullPtr
+        devid.internal,
+        sdlspec,
+        internalCallback,
+        NullPtr
       ).sdlCreationCheck()
     )
 
@@ -34,7 +39,7 @@ def currentAudioDriver: String | Null = SDL_GetCurrentAudioDriver()
 
 def audioDrivers: Iterator[String] = new Iterator[String]:
   private val numAudioDrivers = SDL_GetNumAudioDrivers()
-  private var i               = 0
+  private var i = 0
 
   override def next(): String =
     if hasNext then

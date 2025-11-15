@@ -1,10 +1,10 @@
 package bearlyb.pixels
 
+import bearlyb.vectors.Vec.given
 import org.lwjgl.sdl.SDL_Color
 import org.lwjgl.system.MemoryStack
-import bearlyb.vectors.Vec.given
 
-type Color  = (r: Int, g: Int, b: Int, a: Int)
+type Color = (r: Int, g: Int, b: Int, a: Int)
 type FColor = (r: Float, g: Float, b: Float, a: Float)
 
 object Color:

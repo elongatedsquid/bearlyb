@@ -1,18 +1,19 @@
 package bearlyb.video
 
-import org.lwjgl.sdl.*
 import bearlyb.pixels.PixelFormat
+import org.lwjgl.sdl.*
 
 final class DisplayMode private (
-    private[bearlyb] val internal: SDL_DisplayMode):
+    private[bearlyb] val internal: SDL_DisplayMode
+):
   lazy val displayID: DisplayID = internal.displayID
 
   lazy val format: PixelFormat = PixelFormat.fromInternal(internal.format)
 
-  lazy val width: Int          = internal.w
-  lazy val height: Int         = internal.h
+  lazy val width: Int = internal.w
+  lazy val height: Int = internal.h
   lazy val pixelDensity: Float = internal.pixel_density
-  lazy val refreshRate: Float  = internal.refresh_rate
+  lazy val refreshRate: Float = internal.refresh_rate
 
   lazy val refreshRateFraction: (numerator: Int, denominator: Int) =
     (internal.refresh_rate_numerator, internal.refresh_rate_denominator)

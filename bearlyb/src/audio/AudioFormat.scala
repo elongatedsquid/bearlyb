@@ -1,6 +1,7 @@
 package bearlyb.audio
 
 import org.lwjgl.sdl.SDLAudio.*
+
 import java.nio.ByteOrder
 
 opaque type AudioFormat = Int
@@ -44,6 +45,6 @@ object AudioFormat:
 
   extension (f: AudioFormat)
     private[bearlyb] def internal: Int = f
-    def name: String                   = SDL_GetAudioFormatName(f)
+    def name: String = SDL_GetAudioFormatName(f)
 
 end AudioFormat

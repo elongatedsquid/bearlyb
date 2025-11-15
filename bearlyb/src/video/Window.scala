@@ -1,15 +1,21 @@
 package bearlyb.video
 
-import org.lwjgl.sdl, sdl.SDLVideo.*, sdl.SDLProperties.*
-import org.lwjgl.system, system.MemoryStack.stackPush
-import scala.util.Using
-import bearlyb.*, bearlyb.util.*
-import render.Renderer
+import bearlyb.*
 import bearlyb.surface.Surface
+import bearlyb.util.*
+import org.lwjgl.{sdl, system}
+
+import scala.util.Using
+
+import sdl.SDLVideo.*
+import sdl.SDLProperties.*
+import system.MemoryStack.stackPush
+import render.Renderer
 
 class Window private[bearlyb] (
     private[bearlyb] val internal: Long,
-    private var windowShape: Option[Surface] = None):
+    private var windowShape: Option[Surface] = None
+):
   def title: String = SDL_GetWindowTitle(internal)
 
   def title_=(title: String): Unit = SDL_SetWindowTitle(internal, title)
@@ -27,7 +33,7 @@ class Window private[bearlyb] (
     SDL_SetWindowPosition(internal, width, height).sdlErrorCheck()
 
   def size: (width: Int, height: Int) = Using(stackPush()): stack =>
-    val pWidth  = stack.mallocInt(1)
+    val pWidth = stack.mallocInt(1)
     val pHeight = stack.mallocInt(1)
     SDL_GetWindowSize(internal, pWidth, pHeight)
       .sdlErrorCheck((pWidth.get(0), pHeight.get(0)))
@@ -38,7 +44,7 @@ class Window private[bearlyb] (
     SDL_SetWindowSize(internal, width, height).sdlErrorCheck()
 
   def sizeInPixels: (width: Int, height: Int) = Using(stackPush()): stack =>
-    val pWidth  = stack.mallocInt(1)
+    val pWidth = stack.mallocInt(1)
     val pHeight = stack.mallocInt(1)
     SDL_GetWindowSizeInPixels(internal, pWidth, pHeight)
       .sdlErrorCheck((pWidth.get(0), pHeight.get(0)))
@@ -87,9 +93,13 @@ class Window private[bearlyb] (
       width: Int,
       height: Int,
       flags: Window.Flag*
-    ): Window = new Window(
+  ): Window = new Window(
     SDL_CreatePopupWindow(
-      internal, xOffset, yOffset, width, height,
+      internal,
+      xOffset,
+      yOffset,
+      width,
+      height,
       SDL_WINDOW_POPUP_MENU | flags.combine
     ).sdlCreationCheck()
   )
@@ -100,9 +110,13 @@ class Window private[bearlyb] (
       width: Int,
       height: Int,
       flags: Window.Flag*
-    ): Window = new Window(
+  ): Window = new Window(
     SDL_CreatePopupWindow(
-      internal, xOffset, yOffset, width, height,
+      internal,
+      xOffset,
+      yOffset,
+      width,
+      height,
       SDL_WINDOW_TOOLTIP | flags.combine
     )
   )
@@ -323,7 +337,8 @@ object Window:
     extension (internal: Long)
 
       private[bearlyb] def fromInternal: Flag = Flag.values
-        .find(_.internal == internal).get
+        .find(_.internal == internal)
+        .get
 
   end Flag
 
@@ -348,7 +363,8 @@ object Window:
     /** : true if the window will be used with an externally managed graphics
       * context.
       */
-    case ExternalGraphicsContext(value: Boolean) extends Property(
+    case ExternalGraphicsContext(value: Boolean)
+        extends Property(
           SDL_PROP_WINDOW_CREATE_EXTERNAL_GRAPHICS_CONTEXT_BOOLEAN
         )
 

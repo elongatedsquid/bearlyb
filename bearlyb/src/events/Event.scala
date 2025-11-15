@@ -1,25 +1,26 @@
 package bearlyb.events
 
-import scala.concurrent.duration.*
-import bearlyb.video.{DisplayID, WindowID}
-import bearlyb.keyboard.KeyboardID
-import bearlyb.scancode.Scancode
-import bearlyb.keycode.*
-import bearlyb.mouse, mouse.MouseID
-import bearlyb.joystick.{JoystickID, HatPosition}
-import bearlyb.power.PowerState
-import bearlyb.gamepad
-import bearlyb.sensor.SensorData
-import bearlyb.touch
-import bearlyb.pen.{PenID, PenInput, PenAxis, toPenInputSet}
 import bearlyb.camera.CameraID
+import bearlyb.joystick.{HatPosition, JoystickID}
+import bearlyb.keyboard.KeyboardID
+import bearlyb.keycode.*
+import bearlyb.mouse.toMouseButtonSet
+import bearlyb.pen.{PenAxis, PenID, PenInput, toPenInputSet}
+import bearlyb.power.PowerState
+import bearlyb.scancode.Scancode
+import bearlyb.sensor.SensorData
+import bearlyb.video.{DisplayID, WindowID}
+import bearlyb.{gamepad, mouse, touch}
+import org.lwjgl.PointerBuffer
 import org.lwjgl.sdl.*
 import org.lwjgl.sdl.SDLEvents.*
-import org.lwjgl.PointerBuffer
-import bearlyb.mouse.toMouseButtonSet
-import scala.util.Using
 import org.lwjgl.system.MemoryStack.*
+
 import java.util as ju
+import scala.concurrent.duration.*
+import scala.util.Using
+
+import mouse.MouseID
 
 extension (internal: SDL_Event)
 
@@ -68,80 +69,120 @@ object Event:
         SystemThemeChanged(internal.duration)
 
       // Display events
-      case SDL_EVENT_DISPLAY_ORIENTATION => Display
+      case SDL_EVENT_DISPLAY_ORIENTATION =>
+        Display
           .Orientation(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_ADDED => Display
+      case SDL_EVENT_DISPLAY_ADDED =>
+        Display
           .Added(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_REMOVED => Display
+      case SDL_EVENT_DISPLAY_REMOVED =>
+        Display
           .Removed(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_MOVED => Display
+      case SDL_EVENT_DISPLAY_MOVED =>
+        Display
           .Moved(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED => Display
+      case SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED =>
+        Display
           .DesktopModeChanged(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED => Display
+      case SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED =>
+        Display
           .CurrentModeChanged(internal.duration, internal.display.displayID)
-      case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED => Display
+      case SDL_EVENT_DISPLAY_CONTENT_SCALE_CHANGED =>
+        Display
           .ContentScaleChanged(internal.duration, internal.display.displayID)
 
       // Window events
-      case SDL_EVENT_WINDOW_SHOWN => Window
+      case SDL_EVENT_WINDOW_SHOWN =>
+        Window
           .Shown(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_HIDDEN => Window
+      case SDL_EVENT_WINDOW_HIDDEN =>
+        Window
           .Hidden(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_EXPOSED => Window
+      case SDL_EVENT_WINDOW_EXPOSED =>
+        Window
           .Exposed(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_MOVED => Window.Moved(
-          internal.duration, internal.window.windowID, internal.window.data1,
+      case SDL_EVENT_WINDOW_MOVED =>
+        Window.Moved(
+          internal.duration,
+          internal.window.windowID,
+          internal.window.data1,
           internal.window.data2
         )
-      case SDL_EVENT_WINDOW_RESIZED => Window.Resized(
-          internal.duration, internal.window.windowID, internal.window.data1,
+      case SDL_EVENT_WINDOW_RESIZED =>
+        Window.Resized(
+          internal.duration,
+          internal.window.windowID,
+          internal.window.data1,
           internal.window.data2
         )
-      case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED => Window.Resized(
-          internal.duration, internal.window.windowID, internal.window.data1,
+      case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED =>
+        Window.Resized(
+          internal.duration,
+          internal.window.windowID,
+          internal.window.data1,
           internal.window.data2
         )
-      case SDL_EVENT_WINDOW_METAL_VIEW_RESIZED => Window
+      case SDL_EVENT_WINDOW_METAL_VIEW_RESIZED =>
+        Window
           .MetalViewResized(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_MINIMIZED => Window
+      case SDL_EVENT_WINDOW_MINIMIZED =>
+        Window
           .Minimized(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_MAXIMIZED => Window
+      case SDL_EVENT_WINDOW_MAXIMIZED =>
+        Window
           .Maximized(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_RESTORED => Window
+      case SDL_EVENT_WINDOW_RESTORED =>
+        Window
           .Restored(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_MOUSE_ENTER => Window
+      case SDL_EVENT_WINDOW_MOUSE_ENTER =>
+        Window
           .MouseEnter(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_MOUSE_LEAVE => Window
+      case SDL_EVENT_WINDOW_MOUSE_LEAVE =>
+        Window
           .MouseLeave(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_FOCUS_GAINED => Window
+      case SDL_EVENT_WINDOW_FOCUS_GAINED =>
+        Window
           .FocusGained(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_FOCUS_LOST => Window
+      case SDL_EVENT_WINDOW_FOCUS_LOST =>
+        Window
           .FocusLost(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_CLOSE_REQUESTED => Window
+      case SDL_EVENT_WINDOW_CLOSE_REQUESTED =>
+        Window
           .CloseRequested(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_HIT_TEST => Window
+      case SDL_EVENT_WINDOW_HIT_TEST =>
+        Window
           .HitTest(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_ICCPROF_CHANGED => Window
+      case SDL_EVENT_WINDOW_ICCPROF_CHANGED =>
+        Window
           .ICCProfChanged(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_DISPLAY_CHANGED => Window.DisplayChanged(
-          internal.duration, internal.window.windowID, internal.window.data1
+      case SDL_EVENT_WINDOW_DISPLAY_CHANGED =>
+        Window.DisplayChanged(
+          internal.duration,
+          internal.window.windowID,
+          internal.window.data1
         )
-      case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED => Window
+      case SDL_EVENT_WINDOW_SAFE_AREA_CHANGED =>
+        Window
           .SafeAreaChanged(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_OCCLUDED => Window
+      case SDL_EVENT_WINDOW_OCCLUDED =>
+        Window
           .Occluded(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_ENTER_FULLSCREEN => Window
+      case SDL_EVENT_WINDOW_ENTER_FULLSCREEN =>
+        Window
           .EnterFullscreen(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN => Window
+      case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN =>
+        Window
           .LeaveFullscreen(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_DESTROYED => Window
+      case SDL_EVENT_WINDOW_DESTROYED =>
+        Window
           .Destroyed(internal.duration, internal.window.windowID)
-      case SDL_EVENT_WINDOW_HDR_STATE_CHANGED => Window
+      case SDL_EVENT_WINDOW_HDR_STATE_CHANGED =>
+        Window
           .HDRStateChanged(internal.duration, internal.window.windowID)
 
       // Key events
-      case SDL_EVENT_KEY_DOWN => Key.Down(
+      case SDL_EVENT_KEY_DOWN =>
+        Key.Down(
           internal.duration,
           internal.key.windowID,
           internal.key.which,
@@ -151,7 +192,8 @@ object Event:
           internal.key.down,
           internal.key.repeat
         )
-      case SDL_EVENT_KEY_UP => Key.Up(
+      case SDL_EVENT_KEY_UP =>
+        Key.Up(
           internal.duration,
           internal.key.windowID,
           internal.key.which,
@@ -162,13 +204,20 @@ object Event:
           internal.key.repeat
         )
 
-      case SDL_EVENT_TEXT_EDITING => TextEditing(
-          internal.duration, internal.edit.windowID, internal.edit.textString,
-          internal.edit.start, internal.edit.length
+      case SDL_EVENT_TEXT_EDITING =>
+        TextEditing(
+          internal.duration,
+          internal.edit.windowID,
+          internal.edit.textString,
+          internal.edit.start,
+          internal.edit.length
         )
 
-      case SDL_EVENT_TEXT_INPUT => TextInput(
-          internal.duration, internal.text.windowID, internal.text.textString
+      case SDL_EVENT_TEXT_INPUT =>
+        TextInput(
+          internal.duration,
+          internal.text.windowID,
+          internal.text.textString
         )
 
       case SDL_EVENT_KEYMAP_CHANGED => KeymapChanged(internal.duration)
@@ -182,7 +231,8 @@ object Event:
           Option(internal.edit_candidates.candidates)
         val candidateSeq: Seq[String] = candidateBuffer match
           case None         => Seq.empty
-          case Some(buffer) => Seq.tabulate(
+          case Some(buffer) =>
+            Seq.tabulate(
               internal.edit_candidates.num_candidates
             )(buffer.getStringUTF8)
         val selectedCandidate =
@@ -190,11 +240,15 @@ object Event:
             case -1 => None
             case c  => Some(c)
         TextEditingCandidates(
-          internal.duration, internal.edit_candidates.windowID, candidateSeq,
-          selectedCandidate, internal.edit_candidates.horizontal
+          internal.duration,
+          internal.edit_candidates.windowID,
+          candidateSeq,
+          selectedCandidate,
+          internal.edit_candidates.horizontal
         )
 
-      case SDL_EVENT_MOUSE_BUTTON_DOWN => Mouse.ButtonDown(
+      case SDL_EVENT_MOUSE_BUTTON_DOWN =>
+        Mouse.ButtonDown(
           internal.duration,
           internal.button.windowID,
           internal.button.which,
@@ -204,7 +258,8 @@ object Event:
           internal.button.x,
           internal.button.y
         )
-      case SDL_EVENT_MOUSE_BUTTON_UP => Mouse.ButtonUp(
+      case SDL_EVENT_MOUSE_BUTTON_UP =>
+        Mouse.ButtonUp(
           internal.duration,
           internal.button.windowID,
           internal.button.which,
@@ -215,7 +270,8 @@ object Event:
           internal.button.y
         )
 
-      case SDL_EVENT_MOUSE_MOTION => Mouse.Motion(
+      case SDL_EVENT_MOUSE_MOTION =>
+        Mouse.Motion(
           internal.duration,
           internal.motion.which,
           internal.motion.state.toMouseButtonSet,
@@ -225,7 +281,8 @@ object Event:
           internal.motion.yrel
         )
 
-      case SDL_EVENT_MOUSE_WHEEL => Mouse.Wheel(
+      case SDL_EVENT_MOUSE_WHEEL =>
+        Mouse.Wheel(
           internal.duration,
           internal.wheel.windowID,
           internal.wheel.which,
@@ -238,78 +295,111 @@ object Event:
           internal.wheel.integer_y
         )
 
-      case SDL_EVENT_MOUSE_ADDED => Mouse
+      case SDL_EVENT_MOUSE_ADDED =>
+        Mouse
           .Added(internal.duration, internal.mdevice.which)
 
-      case SDL_EVENT_MOUSE_REMOVED => Mouse
+      case SDL_EVENT_MOUSE_REMOVED =>
+        Mouse
           .Removed(internal.duration, internal.mdevice.which)
 
-      case SDL_EVENT_JOYSTICK_BUTTON_DOWN => Joystick.ButtonDown(
-          internal.duration, internal.jbutton.which, internal.jbutton.button,
+      case SDL_EVENT_JOYSTICK_BUTTON_DOWN =>
+        Joystick.ButtonDown(
+          internal.duration,
+          internal.jbutton.which,
+          internal.jbutton.button,
           internal.jbutton.down
         )
 
-      case SDL_EVENT_JOYSTICK_BUTTON_UP => Joystick.ButtonUp(
-          internal.duration, internal.jbutton.which, internal.jbutton.button,
+      case SDL_EVENT_JOYSTICK_BUTTON_UP =>
+        Joystick.ButtonUp(
+          internal.duration,
+          internal.jbutton.which,
+          internal.jbutton.button,
           internal.jbutton.down
         )
 
-      case SDL_EVENT_JOYSTICK_AXIS_MOTION => Joystick.AxisMotion(
-          internal.duration, internal.jaxis.which, internal.jaxis.axis,
+      case SDL_EVENT_JOYSTICK_AXIS_MOTION =>
+        Joystick.AxisMotion(
+          internal.duration,
+          internal.jaxis.which,
+          internal.jaxis.axis,
           internal.jaxis.value
         )
 
-      case SDL_EVENT_JOYSTICK_BALL_MOTION => Joystick.BallMotion(
-          internal.duration, internal.jball.which, internal.jball.ball,
-          internal.jball.xrel, internal.jball.yrel
+      case SDL_EVENT_JOYSTICK_BALL_MOTION =>
+        Joystick.BallMotion(
+          internal.duration,
+          internal.jball.which,
+          internal.jball.ball,
+          internal.jball.xrel,
+          internal.jball.yrel
         )
 
-      case SDL_EVENT_JOYSTICK_HAT_MOTION => Joystick.HatMotion(
-          internal.duration, internal.jhat.which, internal.jhat.hat,
+      case SDL_EVENT_JOYSTICK_HAT_MOTION =>
+        Joystick.HatMotion(
+          internal.duration,
+          internal.jhat.which,
+          internal.jhat.hat,
           HatPosition.fromInternal(internal.jhat.value)
         )
 
-      case SDL_EVENT_JOYSTICK_ADDED => Joystick
+      case SDL_EVENT_JOYSTICK_ADDED =>
+        Joystick
           .Added(internal.duration, internal.jdevice.which)
 
-      case SDL_EVENT_JOYSTICK_REMOVED => Joystick
+      case SDL_EVENT_JOYSTICK_REMOVED =>
+        Joystick
           .Removed(internal.duration, internal.jdevice.which)
 
-      case SDL_EVENT_JOYSTICK_BATTERY_UPDATED => Joystick.BatteryUpdated(
-          internal.duration, internal.jbattery.which,
+      case SDL_EVENT_JOYSTICK_BATTERY_UPDATED =>
+        Joystick.BatteryUpdated(
+          internal.duration,
+          internal.jbattery.which,
           PowerState.fromInternal(internal.jbattery.state),
           internal.jbattery.percent
         )
 
-      case SDL_EVENT_JOYSTICK_UPDATE_COMPLETE => Joystick
+      case SDL_EVENT_JOYSTICK_UPDATE_COMPLETE =>
+        Joystick
           .UpdateComplete(internal.duration, internal.jdevice.which)
 
-      case SDL_EVENT_GAMEPAD_BUTTON_DOWN => Gamepad.ButtonDown(
-          internal.duration, internal.gbutton.which,
+      case SDL_EVENT_GAMEPAD_BUTTON_DOWN =>
+        Gamepad.ButtonDown(
+          internal.duration,
+          internal.gbutton.which,
           gamepad.Gamepad.Button.fromInternal(internal.gbutton.button),
           internal.gbutton.down
         )
 
-      case SDL_EVENT_GAMEPAD_BUTTON_UP => Gamepad.ButtonUp(
-          internal.duration, internal.gbutton.which,
+      case SDL_EVENT_GAMEPAD_BUTTON_UP =>
+        Gamepad.ButtonUp(
+          internal.duration,
+          internal.gbutton.which,
           gamepad.Gamepad.Button.fromInternal(internal.gbutton.button),
           internal.gbutton.down
         )
 
-      case SDL_EVENT_GAMEPAD_AXIS_MOTION => Gamepad.AxisMotion(
-          internal.duration, internal.gaxis.which,
+      case SDL_EVENT_GAMEPAD_AXIS_MOTION =>
+        Gamepad.AxisMotion(
+          internal.duration,
+          internal.gaxis.which,
           gamepad.Gamepad.Axis.fromInternal(internal.gaxis.axis),
           internal.gaxis.value
         )
 
-      case SDL_EVENT_GAMEPAD_ADDED => Gamepad
+      case SDL_EVENT_GAMEPAD_ADDED =>
+        Gamepad
           .Added(internal.duration, internal.gdevice.which)
-      case SDL_EVENT_GAMEPAD_REMOVED => Gamepad
+      case SDL_EVENT_GAMEPAD_REMOVED =>
+        Gamepad
           .Removed(internal.duration, internal.gdevice.which)
-      case SDL_EVENT_GAMEPAD_REMAPPED => Gamepad
+      case SDL_EVENT_GAMEPAD_REMAPPED =>
+        Gamepad
           .Remapped(internal.duration, internal.gdevice.which)
 
-      case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN => Gamepad.TouchpadDown(
+      case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN =>
+        Gamepad.TouchpadDown(
           internal.duration,
           internal.gtouchpad.which,
           internal.gtouchpad.touchpad,
@@ -319,7 +409,8 @@ object Event:
           internal.gtouchpad.pressure
         )
 
-      case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION => Gamepad.TouchpadMotion(
+      case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION =>
+        Gamepad.TouchpadMotion(
           internal.duration,
           internal.gtouchpad.which,
           internal.gtouchpad.touchpad,
@@ -329,7 +420,8 @@ object Event:
           internal.gtouchpad.pressure
         )
 
-      case SDL_EVENT_GAMEPAD_TOUCHPAD_UP => Gamepad.TouchpadUp(
+      case SDL_EVENT_GAMEPAD_TOUCHPAD_UP =>
+        Gamepad.TouchpadUp(
           internal.duration,
           internal.gtouchpad.which,
           internal.gtouchpad.touchpad,
@@ -339,20 +431,27 @@ object Event:
           internal.gtouchpad.pressure
         )
 
-      case SDL_EVENT_GAMEPAD_SENSOR_UPDATE => Gamepad.SensorUpdate(
-          internal.duration, internal.gsensor.which,
+      case SDL_EVENT_GAMEPAD_SENSOR_UPDATE =>
+        Gamepad.SensorUpdate(
+          internal.duration,
+          internal.gsensor.which,
           SensorData.fromInternal(
-            internal.gsensor.sensor, internal.gsensor.data
-          ), internal.gsensor.sensor_timestamp
+            internal.gsensor.sensor,
+            internal.gsensor.data
+          ),
+          internal.gsensor.sensor_timestamp
         )
 
-      case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE => Gamepad
+      case SDL_EVENT_GAMEPAD_UPDATE_COMPLETE =>
+        Gamepad
           .UpdateComplete(internal.duration, internal.gdevice.which)
 
-      case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED => Gamepad
+      case SDL_EVENT_GAMEPAD_STEAM_HANDLE_UPDATED =>
+        Gamepad
           .SteamHandleUpdated(internal.duration, internal.gdevice.which)
 
-      case SDL_EVENT_FINGER_DOWN => Finger.Down(
+      case SDL_EVENT_FINGER_DOWN =>
+        Finger.Down(
           internal.duration,
           internal.tfinger.touchID,
           internal.tfinger.fingerID,
@@ -364,7 +463,8 @@ object Event:
           internal.tfinger.windowID
         )
 
-      case SDL_EVENT_FINGER_UP => Finger.Up(
+      case SDL_EVENT_FINGER_UP =>
+        Finger.Up(
           internal.duration,
           internal.tfinger.touchID,
           internal.tfinger.fingerID,
@@ -376,7 +476,8 @@ object Event:
           internal.tfinger.windowID
         )
 
-      case SDL_EVENT_FINGER_MOTION => Finger.Motion(
+      case SDL_EVENT_FINGER_MOTION =>
+        Finger.Motion(
           internal.duration,
           internal.tfinger.touchID,
           internal.tfinger.fingerID,
@@ -388,7 +489,8 @@ object Event:
           internal.tfinger.windowID
         )
 
-      case SDL_EVENT_FINGER_CANCELED => Finger.Canceled(
+      case SDL_EVENT_FINGER_CANCELED =>
+        Finger.Canceled(
           internal.duration,
           internal.tfinger.touchID,
           internal.tfinger.fingerID,
@@ -401,54 +503,77 @@ object Event:
         )
 
       case SDL_EVENT_CLIPBOARD_UPDATE =>
-        val mimeTypesBuffer           = internal.clipboard.mime_types
+        val mimeTypesBuffer = internal.clipboard.mime_types
         val mimeTypesSeq: Seq[String] = Seq.tabulate(
           internal.clipboard.num_mime_types
         )(mimeTypesBuffer.getStringUTF8)
         ClipboardUpdate(
-          internal.duration, internal.clipboard.owner, mimeTypesSeq
+          internal.duration,
+          internal.clipboard.owner,
+          mimeTypesSeq
         )
 
-      case SDL_EVENT_DROP_FILE => Drop.File(
-          internal.duration, internal.drop.windowID, internal.drop.x,
-          internal.drop.y, Option(internal.drop.sourceString),
+      case SDL_EVENT_DROP_FILE =>
+        Drop.File(
+          internal.duration,
+          internal.drop.windowID,
+          internal.drop.x,
+          internal.drop.y,
+          Option(internal.drop.sourceString),
           internal.drop.dataString
         )
 
-      case SDL_EVENT_DROP_TEXT => Drop.Text(
-          internal.duration, internal.drop.windowID, internal.drop.x,
-          internal.drop.y, Option(internal.drop.sourceString),
+      case SDL_EVENT_DROP_TEXT =>
+        Drop.Text(
+          internal.duration,
+          internal.drop.windowID,
+          internal.drop.x,
+          internal.drop.y,
+          Option(internal.drop.sourceString),
           internal.drop.dataString
         )
 
-      case SDL_EVENT_DROP_BEGIN => Drop.Begin(
-          internal.duration, internal.drop.windowID,
+      case SDL_EVENT_DROP_BEGIN =>
+        Drop.Begin(
+          internal.duration,
+          internal.drop.windowID,
           Option(internal.drop.sourceString)
         )
 
-      case SDL_EVENT_DROP_COMPLETE => Drop.Complete(
-          internal.duration, internal.drop.windowID, internal.drop.x,
+      case SDL_EVENT_DROP_COMPLETE =>
+        Drop.Complete(
+          internal.duration,
+          internal.drop.windowID,
+          internal.drop.x,
           internal.drop.y,
           Option(internal.drop.sourceString)
         )
 
-      case SDL_EVENT_DROP_POSITION => Drop.Position(
-          internal.duration, internal.drop.windowID, internal.drop.x,
+      case SDL_EVENT_DROP_POSITION =>
+        Drop.Position(
+          internal.duration,
+          internal.drop.windowID,
+          internal.drop.x,
           internal.drop.y,
           Option(internal.drop.sourceString)
         )
 
-      case SDL_EVENT_PEN_PROXIMITY_IN => Pen.ProximityIn(
-          internal.duration, internal.pproximity.windowID,
+      case SDL_EVENT_PEN_PROXIMITY_IN =>
+        Pen.ProximityIn(
+          internal.duration,
+          internal.pproximity.windowID,
           internal.pproximity.which
         )
 
-      case SDL_EVENT_PEN_PROXIMITY_OUT => Pen.ProximityOut(
-          internal.duration, internal.pproximity.windowID,
+      case SDL_EVENT_PEN_PROXIMITY_OUT =>
+        Pen.ProximityOut(
+          internal.duration,
+          internal.pproximity.windowID,
           internal.pproximity.which
         )
 
-      case SDL_EVENT_PEN_DOWN => Pen.Down(
+      case SDL_EVENT_PEN_DOWN =>
+        Pen.Down(
           internal.duration,
           internal.ptouch.windowID,
           internal.ptouch.which,
@@ -459,7 +584,8 @@ object Event:
           internal.ptouch.down
         )
 
-      case SDL_EVENT_PEN_UP => Pen.Up(
+      case SDL_EVENT_PEN_UP =>
+        Pen.Up(
           internal.duration,
           internal.ptouch.windowID,
           internal.ptouch.which,
@@ -470,23 +596,34 @@ object Event:
           internal.ptouch.down
         )
 
-      case SDL_EVENT_PEN_BUTTON_DOWN => Pen.ButtonDown(
-          internal.duration, internal.pbutton.windowID, internal.pbutton.which,
+      case SDL_EVENT_PEN_BUTTON_DOWN =>
+        Pen.ButtonDown(
+          internal.duration,
+          internal.pbutton.windowID,
+          internal.pbutton.which,
           internal.pbutton.pen_state.toPenInputSet
         )
 
-      case SDL_EVENT_PEN_BUTTON_UP => Pen.ButtonUp(
-          internal.duration, internal.pbutton.windowID, internal.pbutton.which,
+      case SDL_EVENT_PEN_BUTTON_UP =>
+        Pen.ButtonUp(
+          internal.duration,
+          internal.pbutton.windowID,
+          internal.pbutton.which,
           internal.pbutton.pen_state.toPenInputSet
         )
 
-      case SDL_EVENT_PEN_MOTION => Pen.Motion(
-          internal.duration, internal.pmotion.windowID, internal.pmotion.which,
-          internal.pmotion.pen_state.toPenInputSet, internal.pmotion.x,
+      case SDL_EVENT_PEN_MOTION =>
+        Pen.Motion(
+          internal.duration,
+          internal.pmotion.windowID,
+          internal.pmotion.which,
+          internal.pmotion.pen_state.toPenInputSet,
+          internal.pmotion.x,
           internal.pmotion.y
         )
 
-      case SDL_EVENT_PEN_AXIS => Pen.Axis(
+      case SDL_EVENT_PEN_AXIS =>
+        Pen.Axis(
           internal.duration,
           internal.paxis.windowID,
           internal.paxis.which,
@@ -497,25 +634,32 @@ object Event:
           internal.paxis.value
         )
 
-      case SDL_EVENT_CAMERA_DEVICE_ADDED => CameraDevice
+      case SDL_EVENT_CAMERA_DEVICE_ADDED =>
+        CameraDevice
           .Added(internal.duration, internal.cdevice.which)
 
-      case SDL_EVENT_CAMERA_DEVICE_REMOVED => CameraDevice
+      case SDL_EVENT_CAMERA_DEVICE_REMOVED =>
+        CameraDevice
           .Removed(internal.duration, internal.cdevice.which)
 
-      case SDL_EVENT_CAMERA_DEVICE_APPROVED => CameraDevice
+      case SDL_EVENT_CAMERA_DEVICE_APPROVED =>
+        CameraDevice
           .Approved(internal.duration, internal.cdevice.which)
 
-      case SDL_EVENT_CAMERA_DEVICE_DENIED => CameraDevice
+      case SDL_EVENT_CAMERA_DEVICE_DENIED =>
+        CameraDevice
           .Denied(internal.duration, internal.cdevice.which)
 
-      case SDL_EVENT_RENDER_TARGETS_RESET => Render
+      case SDL_EVENT_RENDER_TARGETS_RESET =>
+        Render
           .TargetsReset(internal.duration, internal.render.windowID)
 
-      case SDL_EVENT_RENDER_DEVICE_RESET => Render
+      case SDL_EVENT_RENDER_DEVICE_RESET =>
+        Render
           .DeviceReset(internal.duration, internal.render.windowID)
 
-      case SDL_EVENT_RENDER_DEVICE_LOST => Render
+      case SDL_EVENT_RENDER_DEVICE_LOST =>
+        Render
           .DeviceLost(internal.duration, internal.render.windowID)
 
       case SDL_EVENT_POLL_SENTINEL => PollSentinel(internal.duration)
@@ -527,9 +671,9 @@ object Event:
   // ALL EVENTS HERE
 
   /** User-requested quit */
-  case class Quit(timestamp: Duration)        extends Event
+  case class Quit(timestamp: Duration) extends Event
   case class Terminating(timestamp: Duration) extends Event
-  case class LowMemory(timestamp: Duration)   extends Event
+  case class LowMemory(timestamp: Duration) extends Event
 
   case class WillEnterBackground(timestamp: Duration) extends Event
 
@@ -663,7 +807,8 @@ object Event:
         key: Keycode,
         mod: Set[Keymod],
         down: Boolean,
-        repeat: Boolean)
+        repeat: Boolean
+    )
 
     case Up(
         timestamp: Duration,
@@ -673,7 +818,8 @@ object Event:
         key: Keycode,
         mod: Set[Keymod],
         down: Boolean,
-        repeat: Boolean)
+        repeat: Boolean
+    )
 
   end Key
 
@@ -682,8 +828,8 @@ object Event:
       windowID: WindowID,
       text: String,
       start: Int,
-      length: Int)
-      extends Event
+      length: Int
+  ) extends Event
 
   case class TextInput(timestamp: Duration, windowID: WindowID, text: String)
       extends Event
@@ -700,8 +846,8 @@ object Event:
       windowID: WindowID,
       candidates: Seq[String],
       selectedCandidate: Option[Int],
-      horizontal: Boolean)
-      extends Event
+      horizontal: Boolean
+  ) extends Event
 
   enum Mouse extends Event:
     def which: MouseID
@@ -714,7 +860,8 @@ object Event:
         down: Boolean,
         clicks: Byte,
         x: Float,
-        y: Float)
+        y: Float
+    )
 
     case ButtonUp(
         timestamp: Duration,
@@ -724,7 +871,8 @@ object Event:
         down: Boolean,
         clicks: Byte,
         x: Float,
-        y: Float)
+        y: Float
+    )
 
     case Motion(
         timestamp: Duration,
@@ -733,7 +881,8 @@ object Event:
         x: Float,
         y: Float,
         xrel: Float,
-        yrel: Float)
+        yrel: Float
+    )
 
     case Wheel(
         timestamp: Duration,
@@ -745,7 +894,8 @@ object Event:
         mouseX: Float,
         mouseY: Float,
         integerScrolledX: Int,
-        integerScrolledY: Int)
+        integerScrolledY: Int
+    )
 
     case Added(timestamp: Duration, which: MouseID)
     case Removed(timestamp: Duration, which: MouseID)
@@ -759,32 +909,37 @@ object Event:
         timestamp: Duration,
         which: JoystickID,
         button: Byte,
-        down: Boolean)
+        down: Boolean
+    )
 
     case ButtonUp(
         timestamp: Duration,
         which: JoystickID,
         button: Byte,
-        down: Boolean)
+        down: Boolean
+    )
 
     case AxisMotion(
         timestamp: Duration,
         which: JoystickID,
         axis: Byte,
-        value: Int)
+        value: Int
+    )
 
     case BallMotion(
         timestamp: Duration,
         which: JoystickID,
         ball: Byte,
         xrel: Int,
-        yrel: Int)
+        yrel: Int
+    )
 
     case HatMotion(
         timestamp: Duration,
         which: JoystickID,
         hat: Byte,
-        value: HatPosition)
+        value: HatPosition
+    )
 
     case Added(timestamp: Duration, which: JoystickID)
     case Removed(timestamp: Duration, which: JoystickID)
@@ -793,7 +948,8 @@ object Event:
         timestamp: Duration,
         which: JoystickID,
         state: PowerState,
-        percent: Int)
+        percent: Int
+    )
 
     case UpdateComplete(timestamp: Duration, which: JoystickID)
 
@@ -806,19 +962,22 @@ object Event:
         timestamp: Duration,
         which: JoystickID,
         button: gamepad.Gamepad.Button,
-        down: Boolean)
+        down: Boolean
+    )
 
     case ButtonUp(
         timestamp: Duration,
         which: JoystickID,
         button: gamepad.Gamepad.Button,
-        down: Boolean)
+        down: Boolean
+    )
 
     case AxisMotion(
         timestamp: Duration,
         which: JoystickID,
         axis: gamepad.Gamepad.Axis,
-        value: Int)
+        value: Int
+    )
 
     case Added(timestamp: Duration, which: JoystickID)
     case Removed(timestamp: Duration, which: JoystickID)
@@ -831,7 +990,8 @@ object Event:
         finger: Int,
         x: Float,
         y: Float,
-        pressure: Float)
+        pressure: Float
+    )
 
     case TouchpadMotion(
         timestamp: Duration,
@@ -840,7 +1000,8 @@ object Event:
         finger: Int,
         x: Float,
         y: Float,
-        pressure: Float)
+        pressure: Float
+    )
 
     case TouchpadUp(
         timestamp: Duration,
@@ -849,13 +1010,15 @@ object Event:
         finger: Int,
         x: Float,
         y: Float,
-        pressure: Float)
+        pressure: Float
+    )
 
     case SensorUpdate(
         timestamp: Duration,
         which: JoystickID,
         data: SensorData,
-        sensorTimestamp: Long)
+        sensorTimestamp: Long
+    )
 
     case UpdateComplete(timestamp: Duration, which: JoystickID)
 
@@ -882,7 +1045,8 @@ object Event:
         dx: Float,
         dy: Float,
         pressure: Float,
-        windowID: WindowID)
+        windowID: WindowID
+    )
 
     case Up(
         timestamp: Duration,
@@ -893,7 +1057,8 @@ object Event:
         dx: Float,
         dy: Float,
         pressure: Float,
-        windowID: WindowID)
+        windowID: WindowID
+    )
 
     case Motion(
         timestamp: Duration,
@@ -904,7 +1069,8 @@ object Event:
         dx: Float,
         dy: Float,
         pressure: Float,
-        windowID: WindowID)
+        windowID: WindowID
+    )
 
     case Canceled(
         timestamp: Duration,
@@ -915,21 +1081,23 @@ object Event:
         dx: Float,
         dy: Float,
         pressure: Float,
-        windowID: WindowID)
+        windowID: WindowID
+    )
 
   end Finger
 
   /** An event which lets you handle the clipboard
-    * @param owner are we owning the clipboard? (internal update)
-    * @param mimeTypes current mime types, a mime type is the kind of data
-    *   contained in the clipboard. Examples of MIME-types are text/javascript
-    *   or image/png.
+    * @param owner
+    *   are we owning the clipboard? (internal update)
+    * @param mimeTypes
+    *   current mime types, a mime type is the kind of data contained in the
+    *   clipboard. Examples of MIME-types are text/javascript or image/png.
     */
   case class ClipboardUpdate(
       timestamp: Duration,
       owner: Boolean,
-      mimeTypes: Seq[String])
-      extends Event
+      mimeTypes: Seq[String]
+  ) extends Event
 
   enum Drop extends Event:
     def windowID: WindowID
@@ -941,7 +1109,8 @@ object Event:
         x: Float,
         y: Float,
         source: Option[String],
-        filename: String)
+        filename: String
+    )
 
     case Text(
         timestamp: Duration,
@@ -949,7 +1118,8 @@ object Event:
         x: Float,
         y: Float,
         source: Option[String],
-        text: String)
+        text: String
+    )
 
     case Begin(timestamp: Duration, windowID: WindowID, source: Option[String])
 
@@ -958,14 +1128,16 @@ object Event:
         windowID: WindowID,
         x: Float,
         y: Float,
-        source: Option[String])
+        source: Option[String]
+    )
 
     case Position(
         timestamp: Duration,
         windowID: WindowID,
         x: Float,
         y: Float,
-        source: Option[String])
+        source: Option[String]
+    )
 
   end Drop
 
@@ -985,7 +1157,8 @@ object Event:
         x: Float,
         y: Float,
         eraser: Boolean,
-        down: Boolean)
+        down: Boolean
+    )
 
     case Up(
         timestamp: Duration,
@@ -995,19 +1168,22 @@ object Event:
         x: Float,
         y: Float,
         eraser: Boolean,
-        down: Boolean)
+        down: Boolean
+    )
 
     case ButtonDown(
         timestamp: Duration,
         windowID: WindowID,
         which: PenID,
-        penState: Set[PenInput])
+        penState: Set[PenInput]
+    )
 
     case ButtonUp(
         timestamp: Duration,
         windowID: WindowID,
         which: PenID,
-        penState: Set[PenInput])
+        penState: Set[PenInput]
+    )
 
     case Motion(
         timestamp: Duration,
@@ -1015,7 +1191,8 @@ object Event:
         which: PenID,
         penState: Set[PenInput],
         x: Float,
-        y: Float)
+        y: Float
+    )
 
     case Axis(
         timestamp: Duration,
@@ -1025,7 +1202,8 @@ object Event:
         x: Float,
         y: Float,
         axis: PenAxis,
-        value: Float)
+        value: Float
+    )
 
   end Pen
 

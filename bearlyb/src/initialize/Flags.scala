@@ -14,11 +14,11 @@ enum Flags(private[bearlyb] val internal: Int):
     * SDL_HINT_JOYSTICK_THREAD
     */
   case Joystick extends Flags(0x00000200)
-  case Haptic   extends Flags(0x00001000)
+  case Haptic extends Flags(0x00001000)
 
   /** < `SDL_INIT_GAMEPAD` implies `SDL_INIT_JOYSTICK` */
   case Gamepad extends Flags(0x00002000)
-  case Events  extends Flags(0x00004000)
+  case Events extends Flags(0x00004000)
 
   /** < `SDL_INIT_SENSOR` implies `SDL_INIT_EVENTS` */
   case Sensor extends Flags(0x00008000)

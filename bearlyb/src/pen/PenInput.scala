@@ -1,6 +1,7 @@
 package bearlyb.pen
 
 import org.lwjgl.sdl.SDLPen.*
+
 import scala.collection.immutable.BitSet
 
 opaque type PenInput = Int

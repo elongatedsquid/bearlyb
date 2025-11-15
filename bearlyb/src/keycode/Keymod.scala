@@ -1,6 +1,7 @@
 package bearlyb.keycode
 
 import org.lwjgl.sdl.SDLKeycode.*
+
 import scala.collection.immutable.BitSet
 
 extension (internal: Short)

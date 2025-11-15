@@ -31,8 +31,10 @@ end SensorData
 
 object SensorData:
 
-  private[bearlyb] def fromInternal(sensor: Int, data: FloatBuffer)
-      : SensorData =
+  private[bearlyb] def fromInternal(
+      sensor: Int,
+      data: FloatBuffer
+  ): SensorData =
     val (a, b, c) = (data.get(0), data.get(1), data.get(2))
     sensor match
       case -1 => Invalid

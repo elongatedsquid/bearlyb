@@ -15,11 +15,11 @@ extension (internal: Int)
 opaque type Button = Int
 
 object Button:
-  val Left: Button   = 0
+  val Left: Button = 0
   val Middle: Button = 1
-  val Right: Button  = 2
-  val X1: Button     = 3
-  val X2: Button     = 4
+  val Right: Button = 2
+  val X1: Button = 3
+  val X2: Button = 4
 
   extension (b: Button) private[bearlyb] def internal: Int = b + 1
 

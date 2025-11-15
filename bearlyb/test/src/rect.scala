@@ -18,16 +18,16 @@ class rect extends FunSuite:
         y1: Int,
         x2: Int,
         y2: Int
-      ): Boolean =
-      val (x, y, w, h)  = (0, 0, 10, 10)
-      val a             = Rect(x, y, w, h)
+    ): Boolean =
+      val (x, y, w, h) = (0, 0, 10, 10)
+      val a = Rect(x, y, w, h)
       val intersectionA = a.intersection(x1, y1, x2, y2)
 
       val intersectionB: Option[(near: Point[Int], far: Point[Int])] =
         Using(stackPush()): stack =>
-          val b                    = SDL_Rect.malloc(stack).set(x, y, w, h)
+          val b = SDL_Rect.malloc(stack).set(x, y, w, h)
           val (px1, py1, px2, py2) = (x1, y1, x2, y2).vmap(stack.ints)
-          val didIntersect         =
+          val didIntersect =
             SDL_GetRectAndLineIntersection(b, px1, py1, px2, py2)
           if didIntersect then
             Some(((px1.get(0), py1.get(0)), (px2.get(0), py2.get(0))))
@@ -46,7 +46,8 @@ class rect extends FunSuite:
   test("enclose points"):
     assertEquals(Rect.enclosePoints((0, 0)), Rect(0, 0, 1, 1))
     assertEquals(
-      Rect.enclosePoints((0, 1), (2, 3), (-1, -3)), Rect(-1, -3, 4, 7)
+      Rect.enclosePoints((0, 1), (2, 3), (-1, -3)),
+      Rect(-1, -3, 4, 7)
     )
 
 end rect

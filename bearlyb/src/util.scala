@@ -2,8 +2,9 @@ package bearlyb.util
 
 import org.lwjgl.sdl.SDLError.SDL_GetError
 import org.lwjgl.system.MemoryStack
+
+import java.nio.{ByteBuffer, DoubleBuffer, FloatBuffer, IntBuffer, LongBuffer}
 import scala.compiletime.ops.int.S
-import java.nio.{ByteBuffer, IntBuffer, LongBuffer, FloatBuffer, DoubleBuffer}
 import scala.util.Using
 
 private[bearlyb] inline val NullPtr = org.lwjgl.system.MemoryUtil.NULL
@@ -17,17 +18,14 @@ private[bearlyb] def withStack[T](body: MemoryStack ?=> T): T = Using
 private[bearlyb] def stack(using stk: MemoryStack) = stk
 
 extension (success: Boolean)
-
   private[bearlyb] def sdlErrorCheck[T](value: T = ()): T =
     if success then value else sdlError()
 
 extension (ptr: Long)
-
   private[bearlyb] def sdlCreationCheck(): Long =
     if ptr != NullPtr then ptr else sdlError()
 
 extension [T](obj: T)
-
   private[bearlyb] def sdlCreationCheck(): T =
     if obj != null then obj else sdlError()
 
@@ -87,29 +85,29 @@ end MallocMany
 private[bearlyb] def mallocMany(
     n: Int,
     stack: MemoryStack
-  )(using malloc: MallocMany[n.type]
-  ): malloc.Return[ByteBuffer] = malloc.mallocMany(stack)
+)(using malloc: MallocMany[n.type]): malloc.Return[ByteBuffer] =
+  malloc.mallocMany(stack)
 
 private[bearlyb] def mallocManyInt(
     n: Int,
     stack: MemoryStack
-  )(using malloc: MallocMany[n.type]
-  ): malloc.Return[IntBuffer] = malloc.mallocManyInt(stack)
+)(using malloc: MallocMany[n.type]): malloc.Return[IntBuffer] =
+  malloc.mallocManyInt(stack)
 
 private[bearlyb] def mallocManyLong(
     n: Int,
     stack: MemoryStack
-  )(using malloc: MallocMany[n.type]
-  ): malloc.Return[LongBuffer] = malloc.mallocManyLong(stack)
+)(using malloc: MallocMany[n.type]): malloc.Return[LongBuffer] =
+  malloc.mallocManyLong(stack)
 
 private[bearlyb] def mallocManyFloat(
     n: Int,
     stack: MemoryStack
-  )(using malloc: MallocMany[n.type]
-  ): malloc.Return[FloatBuffer] = malloc.mallocManyFloat(stack)
+)(using malloc: MallocMany[n.type]): malloc.Return[FloatBuffer] =
+  malloc.mallocManyFloat(stack)
 
 private[bearlyb] def mallocManyDouble(
     n: Int,
     stack: MemoryStack
-  )(using malloc: MallocMany[n.type]
-  ): malloc.Return[DoubleBuffer] = malloc.mallocManyDouble(stack)
+)(using malloc: MallocMany[n.type]): malloc.Return[DoubleBuffer] =
+  malloc.mallocManyDouble(stack)

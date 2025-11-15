@@ -1,8 +1,8 @@
 package bearlyb.vectors.swizzling
 
-import scala.quoted.*
-import scala.compiletime.{erasedValue, constValue}
 import scala.compiletime.ops.int.S
+import scala.compiletime.{constValue, erasedValue}
+import scala.quoted.*
 
 type Swizzle[T <: Tuple, Indices <: Tuple] <: Tuple = Indices match
   case EmptyTuple => EmptyTuple
@@ -25,12 +25,12 @@ extension [T <: Tuple](tup: T)
 private def swizzleMacro[T <: Tuple: Type](
     tup: Expr[T],
     indices: Expr[Seq[Int]]
-  )(using Quotes
-  ): Expr[Tuple] =
+)(using Quotes): Expr[Tuple] =
   import quotes.reflect.*
 
-  val idxs      = indices.valueOrAbort
-  val tupleType = idxs.map(i => ConstantType(IntConstant(i)).asType)
+  val idxs = indices.valueOrAbort
+  val tupleType = idxs
+    .map(i => ConstantType(IntConstant(i)).asType)
     .foldRight[Type[? <: Tuple]](Type.of[EmptyTuple]):
       case ('[type i <: Int; i], '[type t <: Tuple; t]) => Type.of[i *: t]
       case _ => report.errorAndAbort("Unhandled types")

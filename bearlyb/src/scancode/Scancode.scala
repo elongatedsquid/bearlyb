@@ -41,14 +41,14 @@ object Scancode:
   val K9: Scancode = 38
   val K0: Scancode = 39
 
-  val Return: Scancode    = 40
-  val Escape: Scancode    = 41
+  val Return: Scancode = 40
+  val Escape: Scancode = 41
   val Backspace: Scancode = 42
-  val Tab: Scancode       = 43
-  val Space: Scancode     = 44
+  val Tab: Scancode = 43
+  val Space: Scancode = 44
 
-  val Minus: Scancode       = 45
-  val Equals: Scancode      = 46
+  val Minus: Scancode = 45
+  val Equals: Scancode = 46
   val LeftBracket: Scancode = 47
 
   /** Located at the lower left of the return key on ISO keyboards and at the
@@ -60,7 +60,7 @@ object Scancode:
     * layout, and ASTERISK and MICRO SIGN in a French Windows layout.
     */
   val RightBracket: Scancode = 48
-  val Backslash: Scancode    = 49
+  val Backslash: Scancode = 49
 
   /** ISO USB keyboards actually use this code instead of 49 for the same key,
     * but all OSes I've seen treat the two codes identically. So, as an
@@ -69,8 +69,8 @@ object Scancode:
     * Scancode(instead)of this code. As a user, you should not rely on this code
     * because SDL will never generate it with most (all?) keyboards.
     */
-  val NonUSHash: Scancode  = 50
-  val Semicolon: Scancode  = 51
+  val NonUSHash: Scancode = 50
+  val Semicolon: Scancode = 51
   val Apostrophe: Scancode = 52
 
   /** Located in the top left corner (on both ANSI and ISO keyboards). Produces
@@ -84,61 +84,62 @@ object Scancode:
     * ISO keyboards, and LESS-THAN SIGN and GREATER-THAN SIGN in a Swiss German,
     * German, or French Mac layout on ANSI keyboards.
     */
-  val Grave: Scancode  = 53
-  val Comma: Scancode  = 54
+  val Grave: Scancode = 53
+  val Comma: Scancode = 54
   val Period: Scancode = 55
-  val Slash: Scancode  = 56
+  val Slash: Scancode = 56
 
   val Capslock: Scancode = 57
 
-  val F1: Scancode  = 58
-  val F2: Scancode  = 59
-  val F3: Scancode  = 60
-  val F4: Scancode  = 61
-  val F5: Scancode  = 62
-  val F6: Scancode  = 63
-  val F7: Scancode  = 64
-  val F8: Scancode  = 65
-  val F9: Scancode  = 66
+  val F1: Scancode = 58
+  val F2: Scancode = 59
+  val F3: Scancode = 60
+  val F4: Scancode = 61
+  val F5: Scancode = 62
+  val F6: Scancode = 63
+  val F7: Scancode = 64
+  val F8: Scancode = 65
+  val F9: Scancode = 66
   val F10: Scancode = 67
   val F11: Scancode = 68
   val F12: Scancode = 69
 
   val Printscreen: Scancode = 70
-  val Scrolllock: Scancode  = 71
-  val Pause: Scancode       = 72
+  val Scrolllock: Scancode = 71
+  val Pause: Scancode = 72
 
-  /** insert on PC, help on some Mac keyboards (but does send code 73, not 117) */
-  val Insert: Scancode   = 73
-  val Home: Scancode     = 74
-  val PageUp: Scancode   = 75
-  val Delete: Scancode   = 76
-  val End: Scancode      = 77
+  /** insert on PC, help on some Mac keyboards (but does send code 73, not 117)
+    */
+  val Insert: Scancode = 73
+  val Home: Scancode = 74
+  val PageUp: Scancode = 75
+  val Delete: Scancode = 76
+  val End: Scancode = 77
   val PageDown: Scancode = 78
-  val Right: Scancode    = 79
-  val Left: Scancode     = 80
-  val Down: Scancode     = 81
-  val Up: Scancode       = 82
+  val Right: Scancode = 79
+  val Left: Scancode = 80
+  val Down: Scancode = 81
+  val Up: Scancode = 82
 
   val NumlockClear: Scancode = 83
 
   /** < num lock on PC, clear on Mac keyboards */
-  val KpDivide: Scancode   = 84
+  val KpDivide: Scancode = 84
   val KpMultiply: Scancode = 85
-  val KpMinus: Scancode    = 86
-  val KpPlus: Scancode     = 87
-  val KpEnter: Scancode    = 88
-  val Kp1: Scancode        = 89
-  val Kp2: Scancode        = 90
-  val Kp3: Scancode        = 91
-  val Kp4: Scancode        = 92
-  val Kp5: Scancode        = 93
-  val Kp6: Scancode        = 94
-  val Kp7: Scancode        = 95
-  val Kp8: Scancode        = 96
-  val Kp9: Scancode        = 97
-  val Kp0: Scancode        = 98
-  val KpPeriod: Scancode   = 99
+  val KpMinus: Scancode = 86
+  val KpPlus: Scancode = 87
+  val KpEnter: Scancode = 88
+  val Kp1: Scancode = 89
+  val Kp2: Scancode = 90
+  val Kp3: Scancode = 91
+  val Kp4: Scancode = 92
+  val Kp5: Scancode = 93
+  val Kp6: Scancode = 94
+  val Kp7: Scancode = 95
+  val Kp8: Scancode = 96
+  val Kp9: Scancode = 97
+  val Kp0: Scancode = 98
+  val KpPeriod: Scancode = 99
 
   /** This is the additional key that ISO keyboards have over ANSI ones, located
     * between left shift and Y. Produces GRAVE ACCENT and TILDE in a US or UK
@@ -147,7 +148,7 @@ object Scancode:
     * German, German, or French layout.
     */
   val NonUSBackslash: Scancode = 100
-  val Application: Scancode    = 101
+  val Application: Scancode = 101
 
   /** < windows contextual menu, compose */
   val Power: Scancode = 102
@@ -156,27 +157,27 @@ object Scancode:
     * some Mac keyboards do have a power key.
     */
   val KpEquals: Scancode = 103
-  val F13: Scancode      = 104
-  val F14: Scancode      = 105
-  val F15: Scancode      = 106
-  val F16: Scancode      = 107
-  val F17: Scancode      = 108
-  val F18: Scancode      = 109
-  val F19: Scancode      = 110
-  val F20: Scancode      = 111
-  val F21: Scancode      = 112
-  val F22: Scancode      = 113
-  val F23: Scancode      = 114
-  val F24: Scancode      = 115
-  val Execute: Scancode  = 116
-  val Help: Scancode     = 117
+  val F13: Scancode = 104
+  val F14: Scancode = 105
+  val F15: Scancode = 106
+  val F16: Scancode = 107
+  val F17: Scancode = 108
+  val F18: Scancode = 109
+  val F19: Scancode = 110
+  val F20: Scancode = 111
+  val F21: Scancode = 112
+  val F22: Scancode = 113
+  val F23: Scancode = 114
+  val F24: Scancode = 115
+  val Execute: Scancode = 116
+  val Help: Scancode = 117
 
   /** < AL Integrated Help Center */
   val Menu: Scancode = 118
 
   /** < Menu (show menu) */
   val Select: Scancode = 119
-  val Stop: Scancode   = 120
+  val Stop: Scancode = 120
 
   /** < AC Stop */
   val Again: Scancode = 121
@@ -197,10 +198,10 @@ object Scancode:
   val Find: Scancode = 126
 
   /** < AC Find */
-  val Mute: Scancode          = 127
-  val VolumeUp: Scancode      = 128
-  val VolumeDown: Scancode    = 129
-  val KpComma: Scancode       = 133
+  val Mute: Scancode = 127
+  val VolumeUp: Scancode = 128
+  val VolumeDown: Scancode = 129
+  val KpComma: Scancode = 133
   val KpEqualsas400: Scancode = 134
 
   val International1: Scancode = 135
@@ -216,7 +217,7 @@ object Scancode:
   val International7: Scancode = 141
   val International8: Scancode = 142
   val International9: Scancode = 143
-  val Lang1: Scancode          = 144
+  val Lang1: Scancode = 144
 
   /** < Hangul/English toggle */
   val Lang2: Scancode = 145
@@ -251,72 +252,72 @@ object Scancode:
   val Cancel: Scancode = 155
 
   /** < AC Cancel */
-  val Clear: Scancode      = 156
-  val Prior: Scancode      = 157
-  val Return2: Scancode    = 158
-  val Separator: Scancode  = 159
-  val Out: Scancode        = 160
-  val Oper: Scancode       = 161
+  val Clear: Scancode = 156
+  val Prior: Scancode = 157
+  val Return2: Scancode = 158
+  val Separator: Scancode = 159
+  val Out: Scancode = 160
+  val Oper: Scancode = 161
   val ClearAgain: Scancode = 162
-  val Crsel: Scancode      = 163
-  val Exsel: Scancode      = 164
+  val Crsel: Scancode = 163
+  val Exsel: Scancode = 164
 
-  val Kp00: Scancode               = 176
-  val Kp000: Scancode              = 177
+  val Kp00: Scancode = 176
+  val Kp000: Scancode = 177
   val ThousandsSeparator: Scancode = 178
-  val DecimalSeparator: Scancode   = 179
-  val CurrencyUnit: Scancode       = 180
-  val CurrencySubunit: Scancode    = 181
-  val KpLeftParen: Scancode        = 182
-  val KpRightParen: Scancode       = 183
-  val KpLeftBrace: Scancode        = 184
-  val KpRightBrace: Scancode       = 185
-  val KpTab: Scancode              = 186
-  val KpBackspace: Scancode        = 187
-  val KpA: Scancode                = 188
-  val KpB: Scancode                = 189
-  val KpC: Scancode                = 190
-  val KpD: Scancode                = 191
-  val KpE: Scancode                = 192
-  val KpF: Scancode                = 193
-  val KpXor: Scancode              = 194
-  val KpPower: Scancode            = 195
-  val KpPercent: Scancode          = 196
-  val KpLess: Scancode             = 197
-  val KpGreater: Scancode          = 198
-  val KpAmpersand: Scancode        = 199
-  val KpDblampersand: Scancode     = 200
-  val KpVerticalbar: Scancode      = 201
-  val KpDblverticalbar: Scancode   = 202
-  val KpColon: Scancode            = 203
-  val KpHash: Scancode             = 204
-  val KpSpace: Scancode            = 205
-  val KpAt: Scancode               = 206
-  val KpExclam: Scancode           = 207
-  val KpMemstore: Scancode         = 208
-  val KpMemrecall: Scancode        = 209
-  val KpMemclear: Scancode         = 210
-  val KpMemadd: Scancode           = 211
-  val KpMemsubtract: Scancode      = 212
-  val KpMemmultiply: Scancode      = 213
-  val KpMemdivide: Scancode        = 214
-  val KpPlusminus: Scancode        = 215
-  val KpClear: Scancode            = 216
-  val KpClearentry: Scancode       = 217
-  val KpBinary: Scancode           = 218
-  val KpOctal: Scancode            = 219
-  val KpDecimal: Scancode          = 220
-  val KpHexadecimal: Scancode      = 221
+  val DecimalSeparator: Scancode = 179
+  val CurrencyUnit: Scancode = 180
+  val CurrencySubunit: Scancode = 181
+  val KpLeftParen: Scancode = 182
+  val KpRightParen: Scancode = 183
+  val KpLeftBrace: Scancode = 184
+  val KpRightBrace: Scancode = 185
+  val KpTab: Scancode = 186
+  val KpBackspace: Scancode = 187
+  val KpA: Scancode = 188
+  val KpB: Scancode = 189
+  val KpC: Scancode = 190
+  val KpD: Scancode = 191
+  val KpE: Scancode = 192
+  val KpF: Scancode = 193
+  val KpXor: Scancode = 194
+  val KpPower: Scancode = 195
+  val KpPercent: Scancode = 196
+  val KpLess: Scancode = 197
+  val KpGreater: Scancode = 198
+  val KpAmpersand: Scancode = 199
+  val KpDblampersand: Scancode = 200
+  val KpVerticalbar: Scancode = 201
+  val KpDblverticalbar: Scancode = 202
+  val KpColon: Scancode = 203
+  val KpHash: Scancode = 204
+  val KpSpace: Scancode = 205
+  val KpAt: Scancode = 206
+  val KpExclam: Scancode = 207
+  val KpMemstore: Scancode = 208
+  val KpMemrecall: Scancode = 209
+  val KpMemclear: Scancode = 210
+  val KpMemadd: Scancode = 211
+  val KpMemsubtract: Scancode = 212
+  val KpMemmultiply: Scancode = 213
+  val KpMemdivide: Scancode = 214
+  val KpPlusminus: Scancode = 215
+  val KpClear: Scancode = 216
+  val KpClearentry: Scancode = 217
+  val KpBinary: Scancode = 218
+  val KpOctal: Scancode = 219
+  val KpDecimal: Scancode = 220
+  val KpHexadecimal: Scancode = 221
 
-  val LCtrl: Scancode  = 224
+  val LCtrl: Scancode = 224
   val LShift: Scancode = 225
 
   /** < alt, option */
   val LAlt: Scancode = 226
 
   /** < windows, command (apple), meta */
-  val LGUI: Scancode   = 227
-  val RCtrl: Scancode  = 228
+  val LGUI: Scancode = 227
+  val RCtrl: Scancode = 228
   val RShift: Scancode = 229
 
   /** < alt gr, option */
@@ -431,7 +432,7 @@ object Scancode:
     * on the bottom right of the display.
     */
   val SoftRight: Scancode = 288
-  val Call: Scancode      = 289
+  val Call: Scancode = 289
 
   /** < Used for accepting phone calls. */
   val Endcall: Scancode = 290
@@ -441,7 +442,7 @@ object Scancode:
   opaque type Dyn <: Scancode = Int
 
   object Dyn:
-    def apply(code: Int): Dyn        = code
+    def apply(code: Int): Dyn = code
     def unapply(dyn: Dyn): Some[Int] = Some(dyn)
 
   extension (code: Scancode) private[bearlyb] def internal: Scancode = code

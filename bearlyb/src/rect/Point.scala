@@ -1,10 +1,10 @@
 package bearlyb.rect
 
-import org.lwjgl.sdl.SDL_FPoint
-import org.lwjgl.system.MemoryStack
-import org.lwjgl.sdl.SDLRender.SDL_RenderCoordinatesToWindow
 import bearlyb.render.Renderer
 import bearlyb.util.*
+import org.lwjgl.sdl.SDLRender.SDL_RenderCoordinatesToWindow
+import org.lwjgl.sdl.SDL_FPoint
+import org.lwjgl.system.MemoryStack
 
 type Point[T] = (T, T)
 
@@ -22,8 +22,10 @@ object Point:
 
     /** Convert a point from render-coordinates into window-coordinates
       *
-      * @param renderer the renderer in which the point resides
-      * @return the point in window-coordinates
+      * @param renderer
+      *   the renderer in which the point resides
+      * @return
+      *   the point in window-coordinates
       */
     def toWindowCoords(renderer: Renderer): Point[Float] =
       val (x, y) = pt

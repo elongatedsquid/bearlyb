@@ -20,8 +20,7 @@ object Vec:
 
   def zeroed[A: Numeric as num](
       size: Int
-    )(using ops: VecOps[Vec[A, size.type], A]
-    ) = ops.fill(num.zero)
+  )(using ops: VecOps[Vec[A, size.type], A]) = ops.fill(num.zero)
 
   extension [T <: Tuple](tup: T)
     inline def x = tup(0)
@@ -57,33 +56,34 @@ sealed trait VecOps[Tup <: Tuple, +A]:
     def product[A1 >: A: Numeric as num]: A1 = tup.foldLeft(num.one)(num.times)
 
     infix def dot[A1 >: A: Numeric as num](other: Tup): A1 = tup.iterator
-      .zip(other.iterator).map(num.times.tupled).sum
+      .zip(other.iterator)
+      .map(num.times.tupled)
+      .sum
 
     infix def mul[A1 >: A: Numeric as num](
         other: Tup
-      )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]
-      ) = tup.zip(other).vmap(num.times.tupled)
+    )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]) =
+      tup.zip(other).vmap(num.times.tupled)
 
     inline infix def div[A1 >: A: ([x] =>> Fractional[x] | Integral[x]) as num](
         other: Tup
-      )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]
-      ) = inline num match
+    )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]) = inline num match
       case frac: Fractional[A1] => tup.zip(other).vmap(frac.div)
       case int: Integral[A1]    => tup.zip(other).vmap(int.quot)
 
     def +[A1 >: A: Numeric as num](
         other: Tup
-      )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]
-      ) = tup.zip(other).vmap(num.plus)
+    )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]) =
+      tup.zip(other).vmap(num.plus)
 
     def -[A1 >: A: Numeric as num](
         other: Tup
-      )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]
-      ) = tup.zip(other).vmap(num.minus)
+    )(using VecOps[Tuple.Zip[Tup, Tup], (A1, A1)]) =
+      tup.zip(other).vmap(num.minus)
 
     inline def /[A1 >: A: ([x] =>> Fractional[x] | Integral[x]) as num](
         scalar: A1
-      ) = inline num match
+    ) = inline num match
       case frac: Fractional[A1] => tup.vmap(frac.div(_, scalar))
       case int: Integral[A1]    => tup.vmap(int.quot(_, scalar))
 
@@ -104,12 +104,12 @@ object VecOps:
 
     extension (tup: EmptyTuple)
       def vmap[B](f: Nothing => B): Return[B] = EmptyTuple
-      def foreach[U](f: Nothing => U): Unit   = ()
-      def count(p: Nothing => Boolean): Int   = 0
+      def foreach[U](f: Nothing => U): Unit = ()
+      def count(p: Nothing => Boolean): Int = 0
 
       def find(p: Nothing => Boolean): Option[Nothing] = None
 
-      def foldLeft[B](z: B)(op: (B, Nothing) => B): B  = z
+      def foldLeft[B](z: B)(op: (B, Nothing) => B): B = z
       def foldRight[B](z: B)(op: (Nothing, B) => B): B = z
 
     end extension
@@ -120,10 +120,10 @@ object VecOps:
       A,
       Tail <: Tuple,
       TailVecOps <: VecOps[Tail, A]
-    ]
+  ]
     => (
         tailVecOps: TailVecOps
-    ) => VecOps[A *: Tail, A]:
+  ) => VecOps[A *: Tail, A]:
     type Return[+T] = T *: tailVecOps.Return[T]
 
     def fill[A1 >: A](elem: => A1): Return[A1] = elem *: tailVecOps.fill(elem)

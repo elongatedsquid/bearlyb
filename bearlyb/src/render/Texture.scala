@@ -1,21 +1,19 @@
 package bearlyb.render
 
-import org.lwjgl.sdl.SDL_Texture
-import org.lwjgl.sdl.SDLRender.*
-import org.lwjgl.sdl.SDLPixels.*
-import bearlyb.util.*
-import bearlyb.rect.Rect
-import bearlyb.rect.Point
-import bearlyb.pixels.RawColor
-import bearlyb.vectors.Vec.*
-import scala.util.Using.Releasable
-import org.lwjgl.sdl.SDL_PixelFormatDetails
-import scala.util.Using
-import org.lwjgl.system.MemoryStack.stackPush
-import java.nio.ByteBuffer
-import bearlyb.video.imghelper
-import bearlyb.pixels.PixelFormat
+import bearlyb.pixels.{PixelFormat, RawColor}
+import bearlyb.rect.{Point, Rect}
 import bearlyb.surface.ScaleMode
+import bearlyb.util.*
+import bearlyb.vectors.Vec.*
+import bearlyb.video.imghelper
+import org.lwjgl.sdl.SDLPixels.*
+import org.lwjgl.sdl.SDLRender.*
+import org.lwjgl.sdl.{SDL_PixelFormatDetails, SDL_Texture}
+import org.lwjgl.system.MemoryStack.stackPush
+
+import java.nio.ByteBuffer
+import scala.util.Using
+import scala.util.Using.Releasable
 
 class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
 
@@ -27,7 +25,8 @@ class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
 
   /** Get the renderer that created this texture
     *
-    * @return the renderer for this texture
+    * @return
+    *   the renderer for this texture
     */
   def renderer: Renderer =
     new Renderer(SDL_GetRendererFromTexture(internal).sdlCreationCheck())
@@ -44,10 +43,10 @@ class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
   def lock(rect: Rect[Int] | Null = null): Texture.Writer =
     val (pixels, pitch, w, h) = Using(stackPush()): stack =>
       val pixels = stack.mallocPointer(1)
-      val pitch  = stack.mallocInt(1)
-      val r      = rect.internal(stack)
+      val pitch = stack.mallocInt(1)
+      val r = rect.internal(stack)
       SDL_LockTexture(internal, r, pixels, pitch).sdlErrorCheck()
-      val p      = pitch.get(0)
+      val p = pitch.get(0)
       val (w, h) = rect match
         case null => (this.w, this.h)
         case r    => (r.w, r.h)
@@ -70,20 +69,22 @@ object Texture:
       access: TextureAccess,
       w: Int,
       h: Int
-    ): Texture = new Texture(
+  ): Texture = new Texture(
     SDL_CreateTexture(renderer.internal, format.internal, access.internal, w, h)
       .sdlCreationCheck()
   )
 
   def loadImage(file: String, renderer: Renderer): Option[Texture] = imghelper
-    .loadTexture(file, renderer.internal).map(new Texture(_))
+    .loadTexture(file, renderer.internal)
+    .map(new Texture(_))
 
   case class Writer private[render] (
       tex: Texture,
       private val pixels: ByteBuffer,
       private val pitch: Int,
       private val w: Int,
-      private val h: Int):
+      private val h: Int
+  ):
     private lazy val internalFormat = tex.internalFormat
 
     def update(pos: Point[Int], color: RawColor): Unit =

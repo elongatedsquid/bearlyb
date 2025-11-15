@@ -1,5 +1,8 @@
 //| mill-version: 1.0.6
+//| mvnDeps:
+//| - com.goyeau::mill-scalafix::0.6.0
 
+import com.goyeau.mill.scalafix.ScalafixModule
 import mill.*, scalalib.*, publish.*
 import coursier.MavenRepository
 import mill.api.Task.Simple
@@ -10,7 +13,7 @@ import os.SubPath
 trait BearlybModule extends ScalaModule:
   final def scalaVersion = "3.7.3"
 
-object bearlyb extends LwjglModule, PublishModule:
+object bearlyb extends LwjglModule, PublishModule, ScalafixModule:
   def publishVersion = "0.1.2"
 
   def pomSettings = PomSettings(
@@ -30,7 +33,7 @@ object bearlyb extends LwjglModule, PublishModule:
     "-deprecation",
     "-Wall",
     "-Yexplicit-nulls",
-    "-Werror",
+    // "-Werror",
     "-new-syntax"
   )
 
@@ -55,7 +58,7 @@ object bearlyb extends LwjglModule, PublishModule:
 
 end bearlyb
 
-object `bearlyb-vectors` extends BearlybModule, PublishModule:
+object `bearlyb-vectors` extends BearlybModule, PublishModule, ScalafixModule:
   def publishVersion = "0.1.1"
 
   def pomSettings = PomSettings(
