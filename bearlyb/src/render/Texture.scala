@@ -19,6 +19,7 @@ class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
 
   lazy val w: Int = internal.w
   lazy val h: Int = internal.h
+  lazy val format = PixelFormat.fromInternal(internal.format())
 
   private def internalFormat: SDL_PixelFormatDetails =
     SDL_GetPixelFormatDetails(internal.format)
