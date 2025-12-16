@@ -16,10 +16,15 @@ import bl.pixels.PixelFormat
 import bl.render.TextureAccess
 import bl.pixels.RawColor
 import scala.util.Using
+import bl.render.Font
 
 @main
 def textTest(): Unit =
   bl.init(Init.Video)
+
+  val libraryBuffPtr = bl.initialize.initFontRenderer()
+
+  val font = Font(libraryPtr = libraryBuffPtr, dpi = 64)
 
   val (window, renderer) =
     bearlyb.createWindowAndRenderer("Hello MSDF!", 960, 540)
@@ -39,7 +44,8 @@ def textTest(): Unit =
     renderer.drawColor = (0, 0, 0, 255)
     renderer.renderText(
       renderer,
-      "Hello, World <->",
+      font,
+      "Hello, World <- - ->",
       25,
       100,
       79
@@ -48,5 +54,8 @@ def textTest(): Unit =
     renderer.present()
   end while
 
+  font.destroy
+
+  bl.initialize.deInitFontRenderer(font.libraryBuffPtr)
   bl.quit()
 end textTest

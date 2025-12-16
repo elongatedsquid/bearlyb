@@ -15,10 +15,8 @@ import scala.annotation.targetName
 import scala.util.Using
 
 import Point.*
-import org.lwjgl.BufferUtils
 import org.lwjgl.util.freetype.FreeType
 import org.lwjgl.util.harfbuzz.HarfBuzz
-import org.lwjgl.util.freetype.FT_Face
 
 class Renderer private[render] (private[bearlyb] val internal: Long):
 
@@ -346,29 +344,15 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
   // ---------------- MSDF + HarfBuzz pipeline ----------------
   def renderText(
       renderer: Renderer,
+      font: Font,
       text: String,
       x: Float,
       y: Float,
       textSize: Long
   ) =
-    // --- Initialize FreeType and load font ---
-    val libraryBuf = BufferUtils.createPointerBuffer(1)
-    if FreeType.FT_Init_FreeType(libraryBuf) != 0 then
-      throw RuntimeException("FT_Init_FreeType failed")
-    val ftLibrary: Long = libraryBuf.get(0)
-  
-    val faceBuf = BufferUtils.createPointerBuffer(1)
-    val fontPath = "JetBrainsMono.ttf"
-    if FreeType.FT_New_Face(ftLibrary, fontPath, 0, faceBuf) != 0 then
-      throw RuntimeException("FT_New_Face failed")
-    val ftFace: Long = faceBuf.get(0)
-  
-    if FreeType.nFT_Set_Char_Size(ftFace, 0, textSize * 64, 0, 0) != 0 then
-      throw RuntimeException("Failed to set char size")
+    font.setSize(textSize)
 
     // --- Shape text with HarfBuzz ---
-    org.lwjgl.system.Configuration.HARFBUZZ_LIBRARY_NAME.set("freetype")
-    val hbFont = HarfBuzz.hb_ft_font_create(ftFace, null)
     val buffer = HarfBuzz.hb_buffer_create()
     HarfBuzz.hb_buffer_add_utf8(buffer, text, 0, text.length)
     HarfBuzz.hb_buffer_set_direction(buffer, HarfBuzz.HB_DIRECTION_LTR)
@@ -377,84 +361,91 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       buffer,
       HarfBuzz.hb_language_from_string("en")
     )
-  
-    HarfBuzz.hb_shape(hbFont, buffer, null)
-  
+
+    HarfBuzz.hb_shape(font.hbFontBuffPtr, buffer, null)
+
     val count = HarfBuzz.hb_buffer_get_length(buffer)
     val infos = HarfBuzz.hb_buffer_get_glyph_infos(buffer)
     val positions = HarfBuzz.hb_buffer_get_glyph_positions(buffer)
-  
+
     var penX = x
     var penY = y
-  
+
     for i <- 0 until count do
       val info = infos.get(i)
       val pos = positions.get(i)
       val glyphIndex = info.codepoint()
-  
+
       // Load glyph into FreeType
-      if FreeType.nFT_Load_Glyph(ftFace, glyphIndex, FreeType.FT_LOAD_RENDER) != 0
+      if FreeType.FT_Load_Glyph(
+          font.face,
+          glyphIndex,
+          FreeType.FT_LOAD_DEFAULT
+        ) != 0
       then throw RuntimeException(s"Failed to load glyph $glyphIndex")
-  
-      val slot = FT_Face.nglyph(ftFace)
+
+      FreeType.FT_Render_Glyph(
+        font.face.glyph(),
+        FreeType.FT_RENDER_MODE_NORMAL
+      )
+
+      val slot = font.face.glyph()
       val bitmap = slot.bitmap()
       val width = bitmap.width()
       val rows = bitmap.rows()
       val pitch = bitmap.pitch()
-  
+
       if width > 0 && rows > 0 then
         val bufferPtr = bitmap.buffer(rows * pitch)
-  
+
         if bufferPtr != null && bufferPtr.remaining() >= rows * pitch then
           val glyphTex = bearlyb.render.Texture(
             renderer,
-            PixelFormat.ARGB8888,
+            PixelFormat.RGBA8888,
             TextureAccess.Streaming,
             width,
             rows
           )
-  
+
+          glyphTex.blendMode = BlendMode.Blend
+
           Using.resource(glyphTex.lock()): tex_w =>
-            for row <- 0 until rows do
-              for col <- 0 until width do
-                val alpha = (bufferPtr.get(
-                  row * pitch + col
-                ) & 0xff)
-  
-                val (r, g, b, a) = renderer.drawColor
-  
-                val finalAlpha =
-                  (((alpha / 255f) * (a / 255f)) * 255).toInt
-  
-                val color = glyphTex.format.mapColor((r, g, b, finalAlpha))
-  
-                tex_w(col, row) = color
-  
+            for row <- 0 until rows; col <- 0 until width do
+              val alpha = (bufferPtr.get(
+                row * pitch + col
+              ) & 0xff)
+
+              val (r, g, b, a) = renderer.drawColor
+
+              val finalAlpha =
+                ((alpha & 0xff) * (a & 0xff) / 255).toInt
+
+              val color = glyphTex.format.mapColor((r, g, b, finalAlpha))
+
+              tex_w(col, row) = color
+
           val bearingX = slot.bitmap_left()
           val bearingY = slot.bitmap_top()
-  
+
           val renderX = (penX + bearingX).toInt
           val renderY = (penY - bearingY).toInt
-  
+
           renderer.renderTexture(
             glyphTex,
             dst = Rect(renderX, renderY, width, rows)
           )
-  
+
       val advanceX = pos.x_advance() / 64.0f
       val advanceY = pos.y_advance() / 64.0f
-  
+
       penX += advanceX
       penY += advanceY
-  
-    // Clean up
-    HarfBuzz.hb_buffer_destroy(buffer)
-    HarfBuzz.hb_font_destroy(hbFont)
-    FreeType.nFT_Done_Face(ftFace)
-    FreeType.FT_Done_FreeType(ftLibrary)
-  
-  end renderText
 
+    // Clean up
+    HarfBuzz.hb_buffer_reset(buffer)
+    HarfBuzz.hb_buffer_destroy(buffer)
+
+  end renderText
 
   /** Render a string to this renderer
     *
