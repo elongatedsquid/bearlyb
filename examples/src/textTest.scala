@@ -1,4 +1,4 @@
-// ---------------- MSDF + HarfBuzz pipeline ----------------
+// ---------------- Text Rendering Example ----------------
 import bearlyb as bl, bl.{Event, Init, Keycode, Rect}
 import bearlyb.vectors.given
 import org.lwjgl.util.freetype.*
@@ -22,12 +22,15 @@ import bl.render.Font
 def textTest(): Unit =
   bl.init(Init.Video)
 
-  val libraryBuffPtr = bl.initialize.initFontRenderer()
-
-  val font = Font(libraryPtr = libraryBuffPtr, dpi = 64)
-
   val (window, renderer) =
-    bearlyb.createWindowAndRenderer("Hello MSDF!", 960, 540)
+    bearlyb.createWindowAndRenderer("Hello Text!", 960, 540)
+
+  val font =
+    Font.fromReadablePath(
+      renderer,
+      fontSize = 19,
+      dpi = 64
+    )
 
   var running = true
   while running do
@@ -43,7 +46,6 @@ def textTest(): Unit =
 
     renderer.drawColor = (0, 0, 0, 255)
     renderer.renderText(
-      renderer,
       font,
       "Hello, World <- - ->",
       25,
@@ -56,6 +58,5 @@ def textTest(): Unit =
 
   font.destroy
 
-  bl.initialize.deInitFontRenderer(font.libraryBuffPtr)
   bl.quit()
 end textTest

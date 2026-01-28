@@ -23,6 +23,18 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
   lazy val name: String = SDL_GetRendererName(internal)
   lazy val window: Window = new Window(SDL_GetRenderWindow(internal))
 
+  var isFTInitialized = false
+  lazy val FTLib = withStack:
+    // --- Initialize FreeType and load font ---
+    val libraryBuf = stack.mallocPointer(1)
+    if FreeType.FT_Init_FreeType(libraryBuf) != 0 then
+      throw RuntimeException("FT_Init_FreeType failed")
+    isFTInitialized = true
+
+    org.lwjgl.system.Configuration.HARFBUZZ_LIBRARY_NAME.set("freetype")
+
+    libraryBuf.get(0)
+
   def isViewportSet: Boolean = SDL_RenderViewportSet(internal)
 
   def viewport: Rect[Int] = withStack:
@@ -343,7 +355,6 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
 
   // ---------------- MSDF + HarfBuzz pipeline ----------------
   def renderText(
-      renderer: Renderer,
       font: Font,
       text: String,
       x: Float,
@@ -354,15 +365,10 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
 
     // --- Shape text with HarfBuzz ---
     val buffer = HarfBuzz.hb_buffer_create()
-    HarfBuzz.hb_buffer_add_utf8(buffer, text, 0, text.length)
-    HarfBuzz.hb_buffer_set_direction(buffer, HarfBuzz.HB_DIRECTION_LTR)
-    HarfBuzz.hb_buffer_set_script(buffer, HarfBuzz.HB_SCRIPT_LATIN)
-    HarfBuzz.hb_buffer_set_language(
-      buffer,
-      HarfBuzz.hb_language_from_string("en")
-    )
+    HarfBuzz.hb_buffer_add_utf8(buffer, text, 0, -1)
+    HarfBuzz.hb_buffer_guess_segment_properties(buffer)
 
-    HarfBuzz.hb_shape(font.hbFontBuffPtr, buffer, null)
+    HarfBuzz.hb_shape(font.hbFontPtr, buffer, null)
 
     val count = HarfBuzz.hb_buffer_get_length(buffer)
     val infos = HarfBuzz.hb_buffer_get_glyph_infos(buffer)
@@ -382,7 +388,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
           glyphIndex,
           FreeType.FT_LOAD_DEFAULT
         ) != 0
-      then throw RuntimeException(s"Failed to load glyph $glyphIndex")
+      then throw BearlybException(s"Failed to load glyph $glyphIndex")
 
       FreeType.FT_Render_Glyph(
         font.face.glyph(),
@@ -400,7 +406,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
 
         if bufferPtr != null && bufferPtr.remaining() >= rows * pitch then
           val glyphTex = bearlyb.render.Texture(
-            renderer,
+            this,
             PixelFormat.RGBA8888,
             TextureAccess.Streaming,
             width,
@@ -415,7 +421,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
                 row * pitch + col
               ) & 0xff)
 
-              val (r, g, b, a) = renderer.drawColor
+              val (r, g, b, a) = drawColor
 
               val finalAlpha =
                 ((alpha & 0xff) * (a & 0xff) / 255).toInt
@@ -427,10 +433,10 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
           val bearingX = slot.bitmap_left()
           val bearingY = slot.bitmap_top()
 
-          val renderX = (penX + bearingX).toInt
-          val renderY = (penY - bearingY).toInt
+          val renderX = (penX + bearingX + (pos.x_offset >> 6)).toInt
+          val renderY = (penY - bearingY + (pos.y_offset >> 6)).toInt
 
-          renderer.renderTexture(
+          renderTexture(
             glyphTex,
             dst = Rect(renderX, renderY, width, rows)
           )
@@ -442,7 +448,6 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       penY += advanceY
 
     // Clean up
-    HarfBuzz.hb_buffer_reset(buffer)
     HarfBuzz.hb_buffer_destroy(buffer)
 
   end renderText
@@ -476,6 +481,9 @@ object Renderer:
   given Using.Releasable[Renderer]:
 
     def release(resource: Renderer): Unit =
+      if resource.isFTInitialized then
+        FreeType.FT_Done_FreeType(resource.FTLib)
+        org.lwjgl.system.Configuration.HARFBUZZ_LIBRARY_NAME.set("")
       SDL_DestroyRenderer(resource.internal)
 
   enum LogicalPresentation:
