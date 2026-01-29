@@ -43,7 +43,6 @@ object Font:
 
     val faceBuff = BufferUtils.createPointerBuffer(1)
 
-    println("made it here")
     if FreeType.FT_New_Memory_Face(
         renderer.FTLib,
         fontBuffer,
@@ -51,7 +50,6 @@ object Font:
         faceBuff
       ) != 0
     then throw RuntimeException("FT_New_Face failed")
-    println("crash here")
 
     val faceBuffPtr = faceBuff.get(0)
 
