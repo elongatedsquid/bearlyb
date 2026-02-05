@@ -85,7 +85,7 @@ in
       scala-next
       scala-cli
       metals
-      mill
+      (callPackage ./nix-packages/mill/package.nix { })
       coursier
     ];
   }
