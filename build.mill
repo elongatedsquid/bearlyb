@@ -1,4 +1,4 @@
-//| mill-version: 1.1.1
+//| mill-version: 1.1.5
 //| mill-jvm-version: system
 //| mvnDeps:
 //| - com.goyeau::mill-scalafix::0.6.0
@@ -6,6 +6,7 @@
 import com.goyeau.mill.scalafix.ScalafixModule
 import mill.*, scalalib.*, publish.*
 import mill.util.JarManifest
+import mill.api.Task.Simple
 
 trait BearlybModule extends ScalaModule:
   final def scalaVersion = "3.8.1"
@@ -46,12 +47,11 @@ object bearlyb extends LwjglModule, PublishModule, ScalafixModule:
   )
 
   def bearlybPublishAssembly = Task:
-    val base = lwjglAssembly()
     Assembly.create(
       destJar = Task.dest / "out.jar",
       inputPaths = localClasspath().map(_.path),
       manifest = JarManifest.MillDefault.add("Scala-Version" -> scalaVersion()),
-      base = Some(base)
+      base = None
     )
 
   def jar = Task:
@@ -86,12 +86,12 @@ object examples extends BearlybModule:
   def moduleDeps = Seq(bearlyb)
 
 object playground extends LwjglModule:
-  def mvnDeps = Seq(mvn"com.lihaoyi::os-lib:0.11.4")
+  def mvnDeps = super.mvnDeps() ++ Seq(mvn"com.lihaoyi::os-lib:0.11.4")
   def moduleDeps = Seq(bearlyb)
 
 trait LwjglModule extends BearlybModule:
 
-  val version = "3.4.0-SNAPSHOT"
+  val version = "3.4.1"
 
   val lwjglLibs = "lwjgl" +: Seq(
     "sdl",
@@ -130,33 +130,14 @@ trait LwjglModule extends BearlybModule:
   def lwjglDeps = Task:
     lwjglLibs.map(lwjglDep)
 
-  def compileLwjglDeps = Task:
-    lwjglLibs.map(lwjglSource) ++ lwjglLibs.map(lwjglDocs)
-
-  def runLwjglDeps = Task:
+  override def runMvnDeps =
     for
       dep <- lwjglLibs
       native <- lwjglNatives
     yield lwjglDep(dep, Some(native))
 
-  final def resolvedLwjglDeps = Task:
-    millResolver().classpath(
-      deps = lwjglDeps() ++ runLwjglDeps(),
-      sources = false,
-      artifactTypes = Some(artifactTypes())
-    )
-
-  def lwjglAssembly = Task:
-    Assembly.create(
-      destJar = Task.dest / "out.jar",
-      inputPaths = resolvedLwjglDeps().map(_.path),
-      manifest = JarManifest.MillDefault.add("Scala-Version" -> scalaVersion())
-      // shader = AssemblyModule.jarjarabramsWorker()
-    )
-
-  // def compileMvnDeps = compileLwjglDeps()
-  def unmanagedClasspath = Task:
-    Seq(lwjglAssembly().pathRef)
+  override def mvnDeps =
+    lwjglLibs.map(lwjglDep)
 
   def forkArgs =
     if scala.util.Properties.isMac
@@ -164,8 +145,7 @@ trait LwjglModule extends BearlybModule:
     else Seq.empty
 
   def repositories = Seq(
-    // "https://oss.sonatype.org/content/repositories/snapshots/"
-    "https://central.sonatype.com/repository/maven-snapshots"
+    // "https://central.sonatype.com/repository/maven-snapshots"
   )
 
 end LwjglModule

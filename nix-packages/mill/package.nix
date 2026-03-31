@@ -11,7 +11,7 @@
 
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "mill";
-  version = "1.1.1";
+  version = "1.1.5";
 
   src =
     let
