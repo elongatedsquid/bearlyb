@@ -75,7 +75,7 @@ class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
     withStack:
       val (r, g, b) = mallocMany(3, stack)
       SDL_GetTextureColorMod(internal, r, g, b).sdlErrorCheck()
-      (r, g, b).vmap(_.get & 0xFF)
+      (r, g, b).vmap(_.get & 0xff)
 
   def colorMod_=(col: (r: Int, g: Int, b: Int)): Unit =
     val (r, g, b) = col.toTuple.vmap(_.toByte)

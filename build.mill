@@ -24,7 +24,7 @@ object bearlyb extends LwjglModule, PublishModule, ScalafixModule:
         "lego-eden",
         "Hampus Edén",
         "https://github.com/lego-eden"
-       ),
+      ),
       Developer(
         "elongatedsquid",
         "Malte Axner",

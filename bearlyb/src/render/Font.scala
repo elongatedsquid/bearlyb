@@ -10,7 +10,7 @@ import java.nio.ByteBuffer
 class Font private[bearlyb] (
     private[bearlyb] val face: FT_Face,
     private[bearlyb] val hbFontPtr: Long,
-    private[bearlyb] val fontBuffer: ByteBuffer,
+    private[bearlyb] val fontBuffer: ByteBuffer
 ):
   private[bearlyb] def setSize(fontSize: Long, dpi: Int): Unit =
     if FreeType.FT_Set_Char_Size(face, 0, fontSize << 6, dpi, dpi) != 0 then
@@ -24,13 +24,13 @@ class Font private[bearlyb] (
 object Font:
   def fromFile(
       path: os.ReadablePath,
-      faceIndex: Long = 0,
+      faceIndex: Long = 0
   ): Font =
     fromBytes(os.read.bytes(path), faceIndex)
 
   def fromBytes(
       fontBytes: Array[Byte],
-      faceIndex: Long = 0,
+      faceIndex: Long = 0
   ): Font =
     val ftlib = Font.FTLib
 
@@ -59,12 +59,24 @@ object Font:
     new Font(
       face = face,
       hbFontPtr = hbFont,
-      fontBuffer = fontBuffer,
+      fontBuffer = fontBuffer
     )
   end fromBytes
 
   lazy val defaultMono: Font =
-    Font.fromFile(os.resource/"JetBrainsMono.ttf")
+    Font.fromFile(os.resource / "JetBrainsMono.ttf")
+
+  lazy val default: Font =
+    Font.fromFile(os.resource / "Nunito-Medium.ttf")
+
+  lazy val defaultBold: Font =
+    Font.fromFile(os.resource / "Nunito-ExtraBold.ttf")
+
+  lazy val defaultItalic: Font =
+    Font.fromFile(os.resource / "Nunito-MediumItalic.ttf")
+
+  lazy val defaultBoldItalic: Font =
+    Font.fromFile(os.resource / "Nunito-ExtraBoldItalic.ttf")
 
   private lazy val FTLib = withStack:
     val libraryBuf = stack.mallocPointer(1)
@@ -72,10 +84,12 @@ object Font:
       throw RuntimeException("FT_Init_FreeType failed")
 
     val ft = libraryBuf.get(0)
-    val shutdown = Thread.ofVirtual().unstarted(() => assert(FreeType.FT_Done_FreeType(ft) == 0))
+    val shutdown = Thread
+      .ofVirtual()
+      .unstarted(() => assert(FreeType.FT_Done_FreeType(ft) == 0))
     Runtime.getRuntime().addShutdownHook(shutdown)
 
     ft
   end FTLib
-  
+
 end Font

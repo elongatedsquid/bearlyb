@@ -29,7 +29,7 @@ class Clock():
   end tick
 
   def deltaNanos: Nanos = dt
-  def deltaDouble: Double = dt*1E-9
+  def deltaDouble: Double = dt * 1e-9
 
   def fps: Double =
     1.0 / deltaDouble

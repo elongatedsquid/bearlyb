@@ -247,8 +247,6 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     SDL_RenderTexture(internal, tex.internal, srcrect, dstrect).sdlErrorCheck()
   .get
 
-  def renderTexture(tex: Texture): Unit = renderTexture[Float](tex)
-
   def renderTextureRotated[T: Numeric](
       tex: Texture,
       angle: Double,
@@ -367,7 +365,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       x: Float,
       y: Float,
       textSize: Long,
-      dpi: Int = DefaultDPI,
+      dpi: Int = DefaultDPI
   ) =
     font.setSize(textSize, dpi)
 
@@ -382,8 +380,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     val infos = HarfBuzz.hb_buffer_get_glyph_infos(buffer)
     val positions = HarfBuzz.hb_buffer_get_glyph_positions(buffer)
 
-    var penX = x
-    var penY = y
+    var (penX, penY) = (x, y)
 
     for i <- 0 until count do
       val info = infos.get(i)
@@ -394,16 +391,24 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       if FreeType.FT_Load_Glyph(
           font.face,
           glyphIndex,
-          FreeType.FT_LOAD_DEFAULT
+          FreeType.FT_LOAD_DEFAULT | FreeType.FT_LOAD_COLOR
         ) != 0
       then throw BearlybException(s"Failed to load glyph $glyphIndex")
 
-      FreeType.FT_Render_Glyph(
+      val slot = font.face.glyph()
+      val ret = FreeType.FT_Render_Glyph(
         font.face.glyph(),
         FreeType.FT_RENDER_MODE_NORMAL
       )
+      if ret == FreeType.FT_Err_Missing_SVG_Hooks then
+        throw BearlybException(
+          "Cannot render emojis and other SVG's, maybe this will be supported by bearlyb in the future"
+        )
+      else if ret != 0 then
+        throw BearlybException(
+          s"Failed to render glyph: ${FreeType.FT_Error_String(ret)}"
+        )
 
-      val slot = font.face.glyph()
       val bitmap = slot.bitmap()
       val width = bitmap.width()
       val rows = bitmap.rows()
@@ -422,34 +427,34 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
           )
 
           glyphTex.blendMode = BlendMode.Blend
-          glyphTex.colorMod = drawColor.swizzle(0,1,2)
+          glyphTex.colorMod = drawColor.swizzle(0, 1, 2)
 
           Using.resource(glyphTex.lock()): glyphWriter =>
             for row <- 0 until rows; col <- 0 until width do
               val alpha = (bufferPtr.get(
                 row * pitch + col
-              ) & 0xFF)
+              ) & 0xff)
 
-              glyphWriter(col, row) = RawColor(0xFFFFFF00 | alpha)
+              glyphWriter(col, row) = RawColor(0xffffff00 | alpha)
             end for
 
-          val bearingX = slot.bitmap_left()
-          val bearingY = slot.bitmap_top()
+          val bearingX = slot.bitmap_left().toFloat
+          val bearingY = slot.bitmap_top().toFloat
 
-          val renderX = (penX + bearingX + (pos.x_offset >> 6)).toInt
-          val renderY = (penY - bearingY + (pos.y_offset >> 6)).toInt
+          val renderX = penX + bearingX + (pos.x_offset.toFloat / 64.0f)
+          val renderY = penY - bearingY + (pos.y_offset.toFloat / 64.0f)
 
           renderTexture(
             glyphTex,
-            dst = Rect(renderX, renderY, width, rows)
+            dst = Rect(renderX, renderY, width.toFloat, rows.toFloat)
           )
 
           glyphTex.destroy()
         end if
       end if
 
-      val advanceX = pos.x_advance() / 64.0f
-      val advanceY = pos.y_advance() / 64.0f
+      val advanceX = pos.x_advance().toFloat / 64.0f
+      val advanceY = pos.y_advance().toFloat / 64.0f
 
       penX += advanceX
       penY += advanceY
