@@ -64,7 +64,7 @@ class Font private[bearlyb] (
     // Clean up
     HarfBuzz.hb_buffer_destroy(buffer)
 
-    (glyphHeight(textSize, dpi), width.toFloat / 64.0f)
+    (width.toFloat / 64.0f, glyphHeight(textSize, dpi))
 
   def destroy(): Unit =
     HarfBuzz.hb_font_destroy(hbFontPtr): Unit

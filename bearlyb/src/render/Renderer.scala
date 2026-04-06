@@ -368,6 +368,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       dpi: Int = DefaultDPI
   ) =
     font.setSize(textSize, dpi)
+    val ascender = font.face.size().metrics().ascender()
 
     // --- Shape text with HarfBuzz ---
     val buffer = HarfBuzz.hb_buffer_create()
@@ -380,7 +381,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     val infos = HarfBuzz.hb_buffer_get_glyph_infos(buffer)
     val positions = HarfBuzz.hb_buffer_get_glyph_positions(buffer)
 
-    var (penX, penY) = (x, y)
+    var (penX, penY) = (x, y+ascender.toFloat/64.0f)
 
     for i <- 0 until count do
       val info = infos.get(i)
