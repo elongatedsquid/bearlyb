@@ -14,10 +14,12 @@ import org.lwjgl.util.harfbuzz.hb_glyph_position_t
 class Font private[bearlyb] (
     private[bearlyb] val face: FT_Face,
     private[bearlyb] val hbFontPtr: Long,
-    private[bearlyb] val fontBuffer: ByteBuffer
+    private[bearlyb] val fontBuffer: ByteBuffer,
+    val textSize: Float,
+    val dpi: Int,
 ):
-  private[bearlyb] def setSize(textSize: Long, dpi: Int): Unit =
-    if FreeType.FT_Set_Char_Size(face, 0, textSize << 6, dpi, dpi) != 0 then
+  private[bearlyb] def setSize(): Unit =
+    if FreeType.FT_Set_Char_Size(face, 0, (textSize*64.0f).toLong, dpi, dpi) != 0 then
       throw RuntimeException("Failed to set char size")
     HarfBuzz.hb_ft_font_changed(hbFontPtr)
 
@@ -64,32 +66,27 @@ class Font private[bearlyb] (
   end renderGlyph
     
 
-  def metrics(
-      textSize: Long,
-      dpi: Int = DefaultDPI
-  ): (
+  lazy val metrics: (
       ascender: Float,
       descender: Float,
       lineSpacing: Float
   ) =
-    setSize(textSize, dpi)
+    setSize()
     val metrics = face.size.metrics
     (metrics.ascender, metrics.descender, metrics.height)
       .vmap(_.toFloat / 64.0f)
 
-  def glyphHeight(textSize: Long, dpi: Int = DefaultDPI): Float =
-    setSize(textSize, dpi)
+  lazy val glyphHeight: Float =
+    setSize()
     val metrics = face.size.metrics
     (metrics.ascender - metrics.descender).toFloat / 64.0f
 
   private[bearlyb] def foreachGlyph(
       text: String,
-      textSize: Long,
-      dpi: Int
   )(
       body: (Int, Int, hb_glyph_position_t, hb_glyph_info_t) => Unit
   ): Unit =
-    setSize(textSize, dpi)
+    setSize()
 
     // --- Shape text with HarfBuzz ---
     val buffer = HarfBuzz.hb_buffer_create()
@@ -110,14 +107,12 @@ class Font private[bearlyb] (
 
   def measure(
       text: String,
-      textSize: Long,
-      dpi: Int = DefaultDPI
   ): (
       width: Float,
       height: Float
   ) =
     var width = 0L
-    foreachGlyph(text, textSize, dpi){ (i, count, pos, info) =>
+    foreachGlyph(text){ (i, count, pos, info) =>
       if i == 0 || i == count - 1 then
         val (_, bearingX, _, bitmapW, _, _) = renderGlyph(info)
 
@@ -131,7 +126,22 @@ class Font private[bearlyb] (
       else
         width += pos.x_advance()
     }
-    (width.toFloat / 64.0f, glyphHeight(textSize, dpi))
+    (width.toFloat / 64.0f, glyphHeight)
+
+  def copy(textSize: Float = textSize, dpi: Int = dpi): Font =
+    new Font(
+      face,
+      hbFontPtr,
+      fontBuffer,
+      textSize,
+      dpi,
+    )
+
+  inline def withTextSize(textSize: Float): Font =
+    copy(textSize = textSize)
+
+  inline def withDPI(dpi: Int): Font =
+    copy(dpi = dpi)
 
   def destroy(): Unit =
     HarfBuzz.hb_font_destroy(hbFontPtr): Unit
@@ -140,13 +150,17 @@ class Font private[bearlyb] (
 object Font:
   def fromFile(
       path: os.ReadablePath,
-      faceIndex: Long = 0
+      faceIndex: Long = 0,
+      textSize: Float = DefaultTextSize,
+      dpi: Int = DefaultDPI,
   ): Font =
-    fromBytes(os.read.bytes(path), faceIndex)
+    fromBytes(os.read.bytes(path), faceIndex, textSize, dpi)
 
   def fromBytes(
       fontBytes: Array[Byte],
-      faceIndex: Long = 0
+      faceIndex: Long = 0,
+      textSize: Float = DefaultTextSize,
+      dpi: Int = DefaultDPI,
   ): Font =
     val ftlib = Font.FTLib
 
@@ -175,7 +189,9 @@ object Font:
     new Font(
       face = face,
       hbFontPtr = hbFont,
-      fontBuffer = fontBuffer
+      fontBuffer = fontBuffer,
+      textSize = textSize,
+      dpi = dpi,
     )
   end fromBytes
 
@@ -205,4 +221,6 @@ object Font:
 
     ft
   end FTLib
+
+  inline val DefaultTextSize = 14.0f
 end Font

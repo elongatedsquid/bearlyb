@@ -364,13 +364,11 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       text: String,
       x: Float,
       y: Float,
-      textSize: Long,
-      dpi: Int = DefaultDPI
   ): Unit =
     val ascender = font.face.size().metrics().ascender()
     var (penX, penY) = ((x*64f).toLong, (y*64f).toLong + ascender)
 
-    font.foreachGlyph(text, textSize, dpi){ (i, _, pos, info) =>
+    font.foreachGlyph(text){ (i, _, pos, info) =>
 
       val (bitmap, bitmapLeft, bitmapTop, width, rows, pitch) =
         font.renderGlyph(info)
