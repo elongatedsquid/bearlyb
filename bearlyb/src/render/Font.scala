@@ -81,7 +81,7 @@ class Font private[bearlyb] (
     val metrics = face.size.metrics
     (metrics.ascender - metrics.descender).toFloat / 64.0f
 
-  private[bearlyb] def foreachGlyph(
+  private[bearlyb] def foreachGlyphSingleLine(
       text: String,
   )(
       body: (Int, Int, hb_glyph_position_t, hb_glyph_info_t) => Unit
@@ -103,16 +103,83 @@ class Font private[bearlyb] (
       body(i, count, positions.get(i), infos.get(i))
 
     HarfBuzz.hb_buffer_destroy(buffer)
-  end foreachGlyph
+  end foreachGlyphSingleLine
+
+  private[bearlyb] def foreachLine(
+      text: String,
+      maxWidth: Float = 0f,
+  )(
+      // (sliceFrom, sliceUntil, lineWidth)
+      onLineBreak: (Int, Int, => Float) => Unit,
+  ): Unit =
+    setSize()
+
+    if maxWidth > 0 then
+      var width = 0L
+      var currentWordLength = 0L
+      val maxWidth26Dot6 = (maxWidth*64f).toLong
+      var (sliceFrom, sliceUntil) = (0, 0)
+      var firstGlyphBearing = 0L
+      var firstInRow = true
+
+      foreachGlyphSingleLine(text) { (i, count, pos, info) =>
+        val (_, bearingX, _, bitmapW, _, _) = renderGlyph(info)
+
+        if text.charAt(info.cluster) == ' ' then
+          sliceUntil = info.cluster
+          currentWordLength = 0L
+        else
+          if currentWordLength == 0L then
+            // will only be true if this is the first char after a space
+            firstGlyphBearing = bearingX
+          if firstInRow then
+            currentWordLength -= firstGlyphBearing min 0L
+            width -= firstGlyphBearing min 0L
+            firstInRow = false
+          currentWordLength += pos.x_advance
+        
+        val oldW = width
+        width += pos.x_advance
+        val lineWidth = width max (oldW + (bitmapW.toLong << 6))
+        lazy val oldWFloat = oldW.toFloat / 64f
+        if lineWidth > maxWidth26Dot6 then
+          // line break
+          onLineBreak(sliceFrom, sliceUntil, oldWFloat)
+          sliceFrom = sliceUntil+1
+          sliceUntil = sliceFrom
+          width = currentWordLength
+          firstInRow = true
+
+        if i == count then
+          // reached the end
+          onLineBreak(sliceFrom, text.length(), oldWFloat)
+      }
+    else
+      onLineBreak(0, text.length(), measureSingleLine(text).width)
 
   def measure(
+      text: String,
+      maxWidth: Float = 0f,
+  ): (
+      width: Float,
+      height: Float,
+  ) =
+    setSize()
+    var width = 0f
+    var height = glyphHeight - metrics.lineSpacing
+    foreachLine(text, maxWidth): (_, _, lineWidth) =>
+      width = width max lineWidth
+      height += metrics.lineSpacing
+    (width, height)
+
+  def measureSingleLine(
       text: String,
   ): (
       width: Float,
       height: Float
   ) =
     var width = 0L
-    foreachGlyph(text){ (i, count, pos, info) =>
+    foreachGlyphSingleLine(text){ (i, count, pos, info) =>
       if i == 0 || i == count - 1 then
         val (_, bearingX, _, bitmapW, _, _) = renderGlyph(info)
 
@@ -127,17 +194,17 @@ class Font private[bearlyb] (
         width += pos.x_advance()
     }
     (width.toFloat / 64.0f, glyphHeight)
+  end measureSingleLine
 
   private[bearlyb] def advanceOf_26Dot6(text: String): Long =
     var width = 0l
-    foreachGlyph(text){ (i, count, pos, info) =>
+    foreachGlyphSingleLine(text){ (_, _, pos, _) =>
       width += pos.x_advance()
     }
     width
 
   def advanceOf(text: String): Float =
     advanceOf_26Dot6(text).toFloat / 64.0f
-
 
   def copy(textSize: Float = textSize, dpi: Int = dpi): Font =
     new Font(

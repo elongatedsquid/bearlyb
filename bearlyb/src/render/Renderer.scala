@@ -369,7 +369,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     val ascender = font.face.size().metrics().ascender()
     var (penX, penY) = ((x*64f).toLong, (y*64f).toLong + ascender)
 
-    font.foreachGlyph(text) { (i, _, pos, info) =>
+    font.foreachGlyphSingleLine(text) { (i, _, pos, info) =>
 
       val (bitmap, bitmapLeft, bitmapTop, width, rows, pitch) =
         font.renderGlyph(info)
@@ -423,49 +423,12 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       y: Float,
       maxWidth: Float = 0f,
   ): Unit =
-    if maxWidth > 0 then
-      var width = 0L
-      var currentWordLength = 0L
-      val (_, _, lineHeight) = font.metrics
-      var penY = y
-      val maxWidth26Dot6 = (maxWidth*64f).toLong
-      var (sliceFrom, sliceUntil) = (0, 0)
-      var firstGlyphBearing = 0L
-      var firstInRow = true
+    val (_, _, lineHeight) = font.metrics
+    var penY = y
 
-      font.foreachGlyph(text) { (i, count, pos, info) =>
-        val (_, bearingX, _, bitmapW, _, _) = font.renderGlyph(info)
-
-        if text.charAt(info.cluster) == ' ' then
-          sliceUntil = info.cluster
-          currentWordLength = 0L
-        else
-          if currentWordLength == 0L then
-            // will only be true if this is the first char after a space
-            firstGlyphBearing = bearingX
-          if firstInRow then
-            currentWordLength += firstGlyphBearing min 0L
-            width += firstGlyphBearing min 0L
-            firstInRow = false
-          currentWordLength += pos.x_advance
-        
-        val oldW = width
-        width += pos.x_advance
-        if width > maxWidth26Dot6 || (oldW + (bitmapW.toLong << 6)) > maxWidth26Dot6 then
-          // line break
-          renderSingleLineText(font, text.slice(sliceFrom, sliceUntil), x, penY)
-          sliceFrom = sliceUntil+1
-          sliceUntil = sliceFrom
-          penY += lineHeight
-          width = currentWordLength
-          firstInRow = true
-
-        if i == count then
-          // reached the end
-          renderSingleLineText(font, text.slice(sliceFrom, text.length()), x, penY)
-      }
-    else
-      renderSingleLineText(font, text, x, y)
+    font.foreachLine(text, maxWidth): (sliceFrom, sliceUntil, _) =>
+      renderSingleLineText(font, text.slice(sliceFrom, sliceUntil), x, penY)
+      penY += lineHeight
   end renderText
 
   /** Render a string to this renderer
