@@ -8,6 +8,8 @@ import bearlyb.util.*
 import bearlyb.vectors.Vec.{*, given}
 import bearlyb.video.{BlendMode, Window}
 import org.lwjgl.sdl.SDLRender.*
+import org.lwjgl.sdl.SDLPixels.*
+import org.lwjgl.sdl.SDLProperties.*
 import org.lwjgl.sdl.{SDL_FPoint, SDL_FRect, SDL_Rect}
 import org.lwjgl.system.MemoryStack.stackPush
 
@@ -15,10 +17,7 @@ import scala.annotation.targetName
 import scala.util.Using
 
 import Point.*
-import org.lwjgl.util.freetype.FreeType
-import org.lwjgl.util.harfbuzz.HarfBuzz
 import bearlyb.pixels.RawColor
-import scala.collection.mutable.Buffer
 
 class Renderer private[render] (private[bearlyb] val internal: Long):
 
@@ -370,18 +369,31 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     var (penX, penY) = ((x*64f).toLong, (y*64f).toLong + ascender)
 
     font.foreachGlyphSingleLine(text) { (i, _, pos, info) =>
+      val fracDist = penX & 0b111111 // the floating bits
 
       val (bitmap, bitmapLeft, bitmapTop, width, rows, pitch) =
-        font.renderGlyph(info)
+        font.renderGlyph(info, Some(fracDist))
 
       if width > 0 && rows > 0 then
         if bitmap != null && bitmap.remaining() >= rows * pitch then
-          val glyphTex = Texture(
-            this,
-            PixelFormat.RGBA8888,
-            TextureAccess.Streaming,
-            width,
-            rows
+          val glyphTexProps =
+            val props = SDL_CreateProperties()
+            if props == 0 then
+              throw BearlybException("Failed to create SDL properties for glyph texture")
+            else
+              props
+          SDL_SetNumberProperty(glyphTexProps, SDL_PROP_TEXTURE_CREATE_FORMAT_NUMBER, SDL_PIXELFORMAT_RGBA8888).sdlErrorCheck()
+          // linear color space to match freetype
+          SDL_SetNumberProperty(glyphTexProps, SDL_PROP_TEXTURE_CREATE_COLORSPACE_NUMBER, SDL_COLORSPACE_SRGB_LINEAR).sdlErrorCheck()
+          SDL_SetNumberProperty(glyphTexProps, SDL_PROP_TEXTURE_CREATE_ACCESS_NUMBER, SDL_TEXTUREACCESS_STREAMING).sdlErrorCheck()
+          SDL_SetNumberProperty(glyphTexProps, SDL_PROP_TEXTURE_CREATE_WIDTH_NUMBER, width).sdlErrorCheck()
+          SDL_SetNumberProperty(glyphTexProps, SDL_PROP_TEXTURE_CREATE_HEIGHT_NUMBER, rows).sdlErrorCheck()
+
+          val glyphTex = new Texture(
+            SDL_CreateTextureWithProperties(
+              this.internal,
+              glyphTexProps
+            ).sdlCreationCheck()
           )
 
           glyphTex.blendMode = BlendMode.Blend
@@ -400,12 +412,12 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
           val bearingY = bitmapTop.toLong << 6L
           if i == 0 && bearingX < 0 then penX -= bearingX
 
-          val renderX = penX + bearingX + pos.x_offset.toLong
-          val renderY = penY - bearingY + pos.y_offset.toLong
+          val renderX = (penX + bearingX + pos.x_offset.toLong) >> 6L
+          val renderY = (penY - bearingY + pos.y_offset.toLong) >> 6L
 
           renderTexture(
             glyphTex,
-            dst = Rect(renderX.toFloat/64.0f, renderY.toFloat/64.0f, width.toFloat, rows.toFloat)
+            dst = Rect(renderX, renderY, width.toLong, rows.toLong)
           )
 
           glyphTex.destroy()
@@ -426,8 +438,8 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
     val (_, _, lineHeight) = font.metrics
     var penY = y
 
-    font.foreachLine(text, maxWidth): (sliceFrom, sliceUntil, _) =>
-      renderSingleLineText(font, text.slice(sliceFrom, sliceUntil), x, penY)
+    font.foreachLine(text, maxWidth): (lineText, _) =>
+      renderSingleLineText(font, lineText, x, penY)
       penY += lineHeight
   end renderText
 

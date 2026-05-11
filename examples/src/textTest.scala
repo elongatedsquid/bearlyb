@@ -7,15 +7,10 @@ def textTest(): Unit =
   bl.init(Init.Video)
 
   val (window, renderer) =
-    bearlyb.createWindowAndRenderer("Hello Text!", 800, 800)
+    bearlyb.createWindowAndRenderer("Hello Text!", 400, 80)
 
-  val textSize = 20f
-  val dpi = 96
   val font = Font.default
-    .withTextSize(textSize)
-    .withDPI(dpi)
-  // val font = Font.defaultBoldItalic
-  // val font = Font.fromFile(os.resource/"fonts"/"PlaywriteDKUloopetGuides-Regular.ttf")
+    .withTextSize(50)
 
   var running = true
   while running do
@@ -29,16 +24,16 @@ def textTest(): Unit =
     renderer.drawColor = (255, 255, 255, 255)
     renderer.clear()
 
-    val text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris quis arcu erat. In cursus blandit orci non euismod. Nam blandit a ipsum quis rutrum. Quisque pretium, sapien id lobortis fringilla, quam nulla faucibus felis, eget vestibulum neque lacus non dolor. Integer ut aliquam nunc. Phasellus odio elit, pulvinar vitae risus." 
-    val maxWidth = 300f
-    val (textWidth, textHeight) = font.measure(text, maxWidth)
+    val text = "Hello, bearlyb!"
+    val (textWidth, textHeight) = font.measure(text)
 
     // center the text
     val (w, h) = window.size
     val (x, y) = (w/2 - (textWidth/2), h/2 - (textHeight/2))
 
+    // draw the text to the screen
     renderer.drawColor = (0, 0, 0, 255)
-    renderer.renderText(font, text, x, y, maxWidth) 
+    renderer.renderText(font, text, x, y) 
 
     renderer.present()
   end while

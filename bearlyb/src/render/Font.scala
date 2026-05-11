@@ -11,6 +11,9 @@ import bearlyb.BearlybException
 import org.lwjgl.util.harfbuzz.hb_glyph_info_t
 import org.lwjgl.util.harfbuzz.hb_glyph_position_t
 
+// (line of text, line width)
+private type OnLineBreak = (=> String, => Float) => Unit
+
 class Font private[bearlyb] (
     private[bearlyb] val face: FT_Face,
     private[bearlyb] val hbFontPtr: Long,
@@ -24,7 +27,8 @@ class Font private[bearlyb] (
     HarfBuzz.hb_ft_font_changed(hbFontPtr)
 
   private[bearlyb] def renderGlyph(
-      info: hb_glyph_info_t
+      info: hb_glyph_info_t,
+      subpixelDistance: Option[Long] = None,
   ): (
       bitmap: ByteBuffer,
       bitmapLeft: Int,
@@ -39,11 +43,15 @@ class Font private[bearlyb] (
     if FreeType.FT_Load_Glyph(
         face,
         glyphIndex,
-        FreeType.FT_LOAD_DEFAULT | FreeType.FT_LOAD_COLOR
+        FreeType.FT_LOAD_DEFAULT | FreeType.FT_FT_LOAD_TARGET_LIGHT | FreeType.FT_LOAD_NO_BITMAP
       ) != 0
     then throw BearlybException(s"Failed to load glyph $glyphIndex")
 
     val slot = face.glyph()
+    subpixelDistance.foreach(dist =>
+      FreeType.FT_Outline_Translate(slot.outline, dist, 0)
+    )
+
     val ret = FreeType.FT_Render_Glyph(
       face.glyph(),
       FreeType.FT_RENDER_MODE_NORMAL
@@ -109,8 +117,16 @@ class Font private[bearlyb] (
       text: String,
       maxWidth: Float = 0f,
   )(
-      // (sliceFrom, sliceUntil, lineWidth)
-      onLineBreak: (Int, Int, => Float) => Unit,
+    onLineBreak: OnLineBreak,
+  ): Unit =
+    for line <- text.linesIterator do
+      foreachLineRaw(line, maxWidth)(onLineBreak)
+
+  private[bearlyb] def foreachLineRaw(
+      text: String,
+      maxWidth: Float = 0f,
+  )(
+      onLineBreak: OnLineBreak,
   ): Unit =
     setSize()
 
@@ -140,22 +156,24 @@ class Font private[bearlyb] (
         
         val oldW = width
         width += pos.x_advance
+        val newW = width
         val lineWidth = width max (oldW + (bitmapW.toLong << 6))
         lazy val oldWFloat = oldW.toFloat / 64f
+        lazy val newWFloat = newW.toFloat / 64f
         if lineWidth > maxWidth26Dot6 then
           // line break
-          onLineBreak(sliceFrom, sliceUntil, oldWFloat)
+          onLineBreak(text.slice(sliceFrom, sliceUntil), oldWFloat)
           sliceFrom = sliceUntil+1
           sliceUntil = sliceFrom
           width = currentWordLength
           firstInRow = true
 
-        if i == count then
+        if i == count - 1 then
           // reached the end
-          onLineBreak(sliceFrom, text.length(), oldWFloat)
+          onLineBreak(text.slice(sliceFrom, text.length()), newWFloat)
       }
     else
-      onLineBreak(0, text.length(), measureSingleLine(text).width)
+      onLineBreak(text.slice(0, text.length()), measureSingleLine(text).width)
 
   def measure(
       text: String,
@@ -167,7 +185,7 @@ class Font private[bearlyb] (
     setSize()
     var width = 0f
     var height = glyphHeight - metrics.lineSpacing
-    foreachLine(text, maxWidth): (_, _, lineWidth) =>
+    foreachLine(text, maxWidth): (_, lineWidth) =>
       width = width max lineWidth
       height += metrics.lineSpacing
     (width, height)
@@ -294,11 +312,15 @@ object Font:
       throw RuntimeException("FT_Init_FreeType failed")
 
     val ft = libraryBuf.get(0)
+    // withStack:
+    //   val f = stack.bytes(0.toByte)
+    //   if FreeType.FT_Property_Set(ft, "autofitter", "no-stem-darkening", f) != 0 then
+    //     throw BearlybException("Could not enable stem darkening")
     bearlyb.initialize.addShutdownHook:
       assert(FreeType.FT_Done_FreeType(ft) == 0)
 
     ft
   end FTLib
 
-  inline val DefaultTextSize = 14.0f
+  inline val DefaultTextSize = 20.0f
 end Font
