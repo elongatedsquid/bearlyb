@@ -12,7 +12,7 @@ import boundary.break
 import Numeric.Implicits as numext
 import Ordering.Implicits as ordext
 import Vec.swizzleExtensions.xyxy
-// import MemoryStack.*
+import Vec.{*, given}
 
 case class Rect[T](x: T, y: T, w: T, h: T)
 
@@ -133,6 +133,15 @@ object Rect:
       case frac: Fractional[T] => frac.div(a, b)
       case inte: Integral[T]   => inte.quot(a, b)
 
+    def contains(p: Point[T])(using encloseEps: EnclosepointsEpsilon[T]): Boolean =
+      import numext.infixNumericOps, ordext.infixOrderingOps
+      lazy val eps = encloseEps.value
+      self.x <= p.x && p.x <= (self.xmax-eps)
+      && self.y <= p.y && p.y <= (self.ymax-eps)
+
+    def contains(pts: Point[T]*)(using EnclosepointsEpsilon[T]): Boolean =
+      pts.forall(contains)
+
     def hasIntersection(other: Rect[T])(using
         EnclosepointsEpsilon[T]
     ): Boolean = !self.intersection(other).isEmpty
@@ -195,7 +204,6 @@ object Rect:
   ](
       self: Rect[T]
   )
-
     def intersection(
         x1: T,
         y1: T,
