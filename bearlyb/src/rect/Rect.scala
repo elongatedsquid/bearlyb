@@ -14,7 +14,9 @@ import Ordering.Implicits as ordext
 import Vec.swizzleExtensions.xyxy
 import Vec.{*, given}
 
-case class Rect[T](x: T, y: T, w: T, h: T)
+case class Rect[T](x: T, y: T, w: T, h: T):
+  lazy val pos = (x, y)
+  lazy val dim = (w, h)
 
 object Rect:
   import EnclosepointsEpsilon.value

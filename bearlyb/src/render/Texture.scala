@@ -21,6 +21,7 @@ class Texture private[bearlyb] (private[bearlyb] val internal: SDL_Texture):
 
   lazy val w: Int = internal.w
   lazy val h: Int = internal.h
+  lazy val dim: (Int, Int) = (w, h)
   lazy val format = PixelFormat.fromInternal(internal.format)
 
   def blendMode: BlendMode = Using(stackPush()): stack =>
