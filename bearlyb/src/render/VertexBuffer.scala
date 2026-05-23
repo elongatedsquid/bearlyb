@@ -19,10 +19,18 @@ object VertexBuffer:
 
   extension (buf: VertexBuffer)
     private[bearlyb] def internal: SDL_Vertex.Buffer = buf
+
     def toSeq: Seq[Vertex[Float]] =
       Seq.tabulate(buf.capacity): i =>
         Vertex.fromInternal(buf.get(i))
-  end extension
+
+  extension (inline buf: VertexBuffer)
+    inline def mapInPlace(inline f: Vertex[Float] => Vertex[Float]): VertexBuffer =
+      for i <- 0 until buf.limit do
+        val internalVert = buf.get(i)
+        val newVert = f(Vertex.fromInternal(internalVert))
+        newVert.internal(internalVert)
+      buf
 
   given Releasable[VertexBuffer]:
     def release(buf: VertexBuffer): Unit = buf.free()

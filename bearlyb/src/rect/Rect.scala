@@ -12,7 +12,7 @@ import boundary.break
 import Numeric.Implicits as numext
 import Ordering.Implicits as ordext
 import Vec.swizzleExtensions.xyxy
-import Vec.{*, given}
+import Vec.*
 
 case class Rect[T](x: T, y: T, w: T, h: T):
   lazy val pos = (x, y)

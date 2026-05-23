@@ -4,6 +4,7 @@ import bearlyb.rect.Point, Point.*
 import bearlyb.pixels.{FColor, Color}
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.sdl.SDL_Vertex
+import scala.annotation.publicInBinary
 
 case class Vertex[T](
     pos: Point[T],
@@ -18,9 +19,18 @@ object Vertex:
       val col = Color.internal(v.color)(stack)
       val texCoord = v.texCoord.floatInternal(stack)
       sdlv.set(pos, col, texCoord)
+
+  extension (v: Vertex[Float])
+    @publicInBinary
+    private[bearlyb] def internal(sdlVert: SDL_Vertex): Unit =
+      val Vertex((x,y), (r,g,b,a), (tx,ty)) = v
+      sdlVert.position$.set(x,y)
+      sdlVert.color.set(r,g,b,a)
+      sdlVert.tex_coord.set(tx, ty): Unit
   end extension
 
-  private[bearlyb] def fromInternal(sdlVert: SDL_Vertex): Vertex[Float] =
+  @publicInBinary
+  private[bearlyb] inline def fromInternal(inline sdlVert: SDL_Vertex): Vertex[Float] =
     val pos = sdlVert.position$
     val col = sdlVert.color
     val texCoord = sdlVert.tex_coord
