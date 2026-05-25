@@ -26,6 +26,9 @@ object Rect:
   inline val CodeLeft = 0b0100
   inline val CodeRight = 0b1000
 
+  def apply[T](pos: Point[T], dim: Point[T]): Rect[T] =
+    Rect(pos.x, pos.y, dim.x, dim.y)
+
   def empty[T: Numeric as num] =
     new Rect(num.zero, num.zero, num.zero, num.zero)
 
