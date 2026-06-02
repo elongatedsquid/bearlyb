@@ -346,7 +346,7 @@ class Renderer private[render] (private[bearlyb] val internal: Long):
       case null     => null
       case Seq(xs*) =>
         val res = stack.callocInt(xs.size)
-        for (i, idx) <- xs.zipWithIndex do res.put(i, idx)
+        for (i, idx) <- xs.zipWithIndex do res.put(idx, i)
         res
 
     SDL_RenderGeometry(internal, sdlTex, sdlVerts, sdlIndices).sdlErrorCheck()

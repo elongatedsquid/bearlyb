@@ -20,9 +20,14 @@ object VertexBuffer:
   extension (buf: VertexBuffer)
     private[bearlyb] def internal: SDL_Vertex.Buffer = buf
 
-    def toSeq: Seq[Vertex[Float]] =
-      Seq.tabulate(buf.capacity): i =>
+    inline def toSeq: Seq[Vertex[Float]] = buf.toIndexedSeq
+
+    def toIndexedSeq: IndexedSeq[Vertex[Float]] =
+      IndexedSeq.tabulate(buf.capacity): i =>
         Vertex.fromInternal(buf.get(i))
+
+    def destroy(): Unit =
+      summon[Releasable[VertexBuffer]].release(buf)
 
   extension (inline buf: VertexBuffer)
     inline def mapInPlace(inline f: Vertex[Float] => Vertex[Float]): VertexBuffer =
