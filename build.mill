@@ -7,13 +7,12 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import mill.*, scalalib.*, publish.*
 import mill.util.JarManifest
 import mill.api.Task.Simple
-import mill.util.Jvm
 
 trait BearlybModule extends ScalaModule:
   final def scalaVersion = "3.8.3"
 
 object bearlyb extends LwjglModule, PublishModule, ScalafixModule:
-  def publishVersion = "0.2.6"
+  def publishVersion = "0.2.5"
 
   def pomSettings = PomSettings(
     description = "A scala game library",
@@ -38,14 +37,26 @@ object bearlyb extends LwjglModule, PublishModule, ScalafixModule:
   val deps = Seq(mvn"com.lihaoyi::os-lib:0.11.8")
   def moduleDeps = Seq(`bearlyb-vectors`)
   def mvnDeps = super.mvnDeps() ++ deps
+  def runMvnDeps = super.runMvnDeps()
   def scalacOptions = Seq(
     "-deprecation",
     "-Wall",
     "-Yexplicit-nulls",
     // "-Werror",
     "-new-syntax",
-    "-release", "21"
   )
+
+  def bearlybPublishAssembly = Task:
+    Assembly.create(
+      destJar = Task.dest / "out.jar",
+      inputPaths = localClasspath().map(_.path),
+      manifest = manifest(),
+      base = None
+    )
+
+  def jar = Task:
+    val jar = bearlybPublishAssembly()
+    jar.pathRef
 
   object test extends ScalaTests, TestModule.Munit:
     def mvnDeps = Seq(
@@ -64,7 +75,6 @@ object `bearlyb-vectors` extends BearlybModule, PublishModule, ScalafixModule:
     "-Yexplicit-nulls",
     // "-Werror",
     "-new-syntax",
-    "-release", "21"
   )
 
   def pomSettings = PomSettings(
@@ -86,7 +96,8 @@ object examples extends BearlybModule:
     "-deprecation",
   )
 
-object playground extends BearlybModule:
+object playground extends LwjglModule:
+  def mvnDeps = super.mvnDeps() ++ Seq(mvn"com.lihaoyi::os-lib:0.11.4")
   def moduleDeps = Seq(bearlyb)
 
 trait LwjglModule extends BearlybModule:
@@ -139,15 +150,24 @@ trait LwjglModule extends BearlybModule:
   override def mvnDeps =
     lwjglDeps()
 
-  override def jar = Task:
-    val natives = defaultResolver().classpath(lwjglNativeDeps())
+  final def resolvedLwjglDeps = Task:
+    millResolver().classpath(
+      deps = lwjglDeps() ++ lwjglNativeDeps(),
+      sources = false,
+      artifactTypes = Some(artifactTypes())
+    )
+
+  def lwjglAssembly = Task:
     Assembly.create(
-      Task.dest/"out.jar",
-      (localClasspath() ++ natives).map(_.path).filter(os.exists),
-      manifest = manifest()
-    ).pathRef
+      destJar = Task.dest / "out.jar",
+      inputPaths = resolvedLwjglDeps().map(_.path),
+      manifest = JarManifest.MillDefault.add("Scala-Version" -> scalaVersion())
+      // shader = AssemblyModule.jarjarabramsWorker()
+    )
 
   // def compileMvnDeps = compileLwjglDeps()
+  override def unmanagedClasspath = Task:
+    Seq(lwjglAssembly().pathRef)
 
   def forkArgs =
     if scala.util.Properties.isMac
